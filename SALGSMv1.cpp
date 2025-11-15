@@ -70,7 +70,7 @@ void SALGSMv1::location_area_code(void){
 
 }
 
-String SALGSMv1::http_get(String url, int wait = 1000){
+String SALGSMv1::http_get_(String url, int wait){
   url += "&lacDec="+String(this->lacDec)+"&cellDec="+String(this->cellDec)+"&netop="+this->network_operator+"&end=END";
   this->sendAT("AT+HTTPINIT",wait);
   this->sendAT("AT+HTTPPARA=\"CID\",1",wait);
@@ -96,7 +96,7 @@ String SALGSMv1::get_ip(void){
   return this->sendAT("AT+SAPBR=2,1");
 }
 
-String SALGSMv1::sendAT(String cmd, int wait = 3000) {
+String SALGSMv1::sendAT(String cmd, int wait) {
   String wynik = "";
   char pom;
   uint8_t n_pom=0;

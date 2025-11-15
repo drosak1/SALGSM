@@ -22,7 +22,7 @@ public:
   bool con_to_internet(void);
   String get_ip(void);
   bool waitForNetwork(void);
-  String http_get(String url, int wait = 1000);
+  String http_get_(String url, int wait = 1000);
   void httpGetGoogle(void);
   void sendHTTPPOST(const char* host, int port, const char* path, const char* data);
   void location_area_code(void);

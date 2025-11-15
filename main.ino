@@ -25,7 +25,7 @@ void loop() {
     GSM_dev.con_to_internet();
   }
 
-  Serial.println(GSM_dev.http_get("http://dlb.sytes.net/api.php?name=demo&command=TIME",2000));
+  Serial.println(GSM_dev.http_get_("http://dlb.sytes.net/api.php?name=demo&command=TIME",2000));
 
   if (Serial1.available()) Serial.write(Serial1.read());
   if (Serial.available()) Serial1.write(Serial.read());
