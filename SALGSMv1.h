@@ -26,6 +26,7 @@ public:
   void httpGetGoogle(void);
   void sendHTTPPOST(const char* host, int port, const char* path, const char* data);
   void location_area_code(void);
+  void sendSMS(String number, String msg);
   String STATUS = "OK"; //"AT_ERROR", 
 
 private:

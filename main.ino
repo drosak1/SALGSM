@@ -1,6 +1,6 @@
 #include "SALGSMv1.h"
 
-SALGSMv1 GSM_dev(Serial1,"sensor.net", false); 
+SALGSMv1 GSM_dev(Serial1,"sensor.net", true); 
 
 void setup() {
   Serial.begin(115200);
@@ -25,7 +25,7 @@ void loop() {
     GSM_dev.con_to_internet();
   }
 
-  Serial.println(GSM_dev.http_get_("http://dlb.sytes.net/api.php?name=demo&command=TIME",2000));
+  Serial.println(GSM_dev.http_get_("http://dlb.com.pl/api.php?name=demo&command=TIME",2000));
 
   if (Serial1.available()) Serial.write(Serial1.read());
   if (Serial.available()) Serial1.write(Serial.read());

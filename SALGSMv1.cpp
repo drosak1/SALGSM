@@ -256,3 +256,39 @@ String SALGSMv1::extractHttpData(String raw) {
 
   return data;
 }
+
+void SALGSMv1::sendSMS(String number, String msg) {
+
+  sendAT("AT+CMGF=1");  // tryb tekstowy
+  delay(500);
+
+  sendAT("AT+CSCS=\"GSM\"");
+  delay(500);
+
+  sendAT("AT+CMGS=\"+48609105069\"");
+  delay(500);
+
+  my_serial.println("TEST SMS z modulu GSMSALv1");
+  delay(200);
+
+  my_serial.write(26); // CTRL+Z
+  my_serial.write(26); // CTRL+Z
+
+
+  // sendAT("AT");
+  // sendAT("AT+CMGF=1");             // Tryb tekstowy
+  // sendAT("AT+CSCS=\"GSM\"");       // Kodowanie
+
+  // my_serial.print("AT+CMGS=\"");
+  // my_serial.print(number);
+  // my_serial.println("\"");
+  // delay(500);
+
+  // my_serial.print(msg);
+  // delay(200);
+
+  // my_serial.write(26); // CTRL+Z
+  // delay(3000);
+
+
+}
