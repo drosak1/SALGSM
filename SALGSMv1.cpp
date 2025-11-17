@@ -6,7 +6,12 @@ String SALGSMv1::init(void){
 }
 
 String SALGSMv1::IMSI(void){
-  return this->sendAT("AT+CIMI",200);
+  if (this->my_IMSI.length()>2){
+  }
+  else{
+    this->sendAT("AT+CIMI",1200);
+  }
+  return this->my_IMSI;
 }
 
 String SALGSMv1::networks(void){
@@ -144,6 +149,11 @@ String SALGSMv1::sendAT(String cmd, int wait) {
     this->BUFF += extractHttpData(wynik);
   }
 
+  if(wynik.indexOf(removeATPrefix("+CIMI"))>-1){
+    if (DEBUG) Serial.println(extractIMSI(wynik));
+    this->my_IMSI = extractIMSI(wynik);
+  }
+
   return wynik;
 }
 
@@ -274,21 +284,17 @@ void SALGSMv1::sendSMS(String number, String msg) {
   my_serial.write(26); // CTRL+Z
   my_serial.write(26); // CTRL+Z
 
+}
 
-  // sendAT("AT");
-  // sendAT("AT+CMGF=1");             // Tryb tekstowy
-  // sendAT("AT+CSCS=\"GSM\"");       // Kodowanie
+String SALGSMv1::extractIMSI(String resp) {
+  resp.replace("\r", "");
+  resp.replace("\n", "");
+  resp.replace(" ", "");
 
-  // my_serial.print("AT+CMGS=\"");
-  // my_serial.print(number);
-  // my_serial.println("\"");
-  // delay(500);
+  // usuń "AT+CIMI" jeśli występuje
+  resp.replace("AT+CIMI", "");
+  resp.replace("OK", "");
 
-  // my_serial.print(msg);
-  // delay(200);
-
-  // my_serial.write(26); // CTRL+Z
-  // delay(3000);
-
-
+  // zostaje tylko cyfrowy IMSI
+  return resp;
 }

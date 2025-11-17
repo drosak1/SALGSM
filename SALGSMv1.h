@@ -35,6 +35,7 @@ private:
   String my_APN = "";
   String BUFF = "";
   uint16_t my_lengthToRead = 0;
+  String my_IMSI = "";
 
   //location_area_code
   long lacDec = 0;
@@ -45,6 +46,7 @@ private:
   String clean(String s);
   String removeATPrefix(String text);
   String extractHttpData(String raw);
+  String extractIMSI(String resp);
 };
 
 #endif
