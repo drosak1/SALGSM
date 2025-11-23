@@ -1,5 +1,7 @@
 ## Repozytorium Gitea
 
+AT+IPR=9600 -> ustawia transmisje na GSM
+
 Creating a new repository on the command line
 
 Existing repositories
@@ -42,3 +44,106 @@ git config --global http.postBuffer 524288000
 
 ## Autor
 Dawid Rosak
+
+
+
+AT
+
+OK
+
+RDY
+
++CFUN: 1
+
++CPIN: READY
+
+Call Ready
+
+SMS Ready
+AT
+
+OK
+
+AT+CIMI
+
+901405180011350
+
+OK
+
+
+AT+CGATT=1
+
+OK
+
+AT+CSTT="internet"
+
+OK
+AT+SAPBR=3,1,"CONTYPE","GPRS"
+
+OK
+AT+SAPBR=3,1,"APN","sensor.net"
+
+OK
+AT+SAPBR=1,1
+
+OK
+AT+SAPBR=2,1
+
++SAPBR: 1,1,"10.0.0.1"
+
+OK
+
+
+AT+HTTPINIT
+
+OK
+
+AT+HTTPPARA="CID",1
+
+OK
+
+AT+HTTPPARA="URL","http://dlb.com.pl/api/v1/telemetry.php?ID=901405180011350&KEY=9999&payload=xxyy"
+
+OK
+
+AT+HTTPACTION=0
+
+OK
+
++HTTPACTION: 0,200,65
+
+
+AT+HTTPREAD=0,33
+
++HTTPREAD: 33
+﻿25.11.22 22:50:00;ID;901405180
+OK
+AT+HTTPREAD=33,66
+
++HTTPREAD: 32
+011350;KEY;;payload;xxyy;error;;
+OK
+
+AT+HTTPTERM
+
+OK
+AT+HTTPINIT
+
+OK
+AT+HTTPPARA="CID",1
+
+OK
+AT+HTTPPARA="URL","http://dlb.com.pl/api/v1/telemetry.php?ID=901405180011350&KEY=9999&payload=xxyy"
+
+OK
+AT+HTTPPARA="http://dlb.com.pl/api/v1/telemetry.php?ID=123456&KEY=9999&phone=48609105069&sms=GSMTEST"
+
+ERROR
+AT+HTTPPARA="URL","http://dlb.com.pl/api/v1/telemetry.php?ID=123456&KEY=9999&phone=48609105069&sms=GSMTEST"
+
+OK
+AT+HTTPACTION=0
+
+OK
+
++HTTPACTION: 0,200,12

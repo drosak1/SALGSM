@@ -1,17 +1,118 @@
 #include "SALGSMv1.h"
+//#include <avr/wdt.h>
+
+SALGSMv1::SALGSMv1(String APN, bool debug){
+   this->my_APN = APN;
+   this->DEBUG = debug;
+}
 
 String SALGSMv1::init(void){
   this->reset();
   return "=== Inicjalizacja SALGSMv1 ===";
 }
 
-String SALGSMv1::IMSI(void){
-  if (this->my_IMSI.length()>2){
+String SALGSMv1::sendAT(const char* cmd, int wait) {
+  //String wynik = "";
+  char wynik[160]; 
+
+  uint16_t pom = 0;
+  uint16_t n_pom=0;
+  delay(1000);
+
+  while(cmd[pom] != NULL){
+    my_serial->write(cmd[pom]);
+    pom++;
+  } 
+  my_serial->write("\n");
+  //my_serial->write("\r");
+  pom=0;
+
+  //if(DEBUG) Serial.print(" |");
+  char c;
+  //wdt_reset();
+  // while ((n_pom < wait)) { //} and  not(strstr(wynik,"OK"))){
+  //   if (my_serial->available())  { 
+  //     c = my_serial->read(); 
+  //     //Serial.print(c);
+  //     if (c != ' ' && c != '\n' && c != '\r' && c != '\t') {
+  //       wynik[pom] = c;
+  //       //if(DEBUG) Serial.print(c);
+  //       pom++;
+  //     }
+  //   }
+  //   n_pom++;
+  //   delay(1);
+  // }
+
+  delay(2000);
+  //wynik = clean(wynik);
+  
+  if(DEBUG){
+      //Serial.print(" |>> cmd >> ");
+      //Serial.print(cmd);
+      //Serial.print(" >> answere >> ");
+      pom = 0;
+      // while(wynik[pom] != NULL) {
+      //   Serial.write(wynik[pom]);
+      //   pom++;
+      // }
+      //Serial.print(wynik);
+      //Serial.print(" >> remove AT prefix >> ");
+      //Serial.print(removeATPrefix(cmd));
+      //Serial.println(" >>>> "); 
+  }
+
+  if(strstr(wynik,"ERROR")) this->STATUS = false;
+  if(strstr(wynik,"OK")) this->STATUS = true;
+  //if(wynik.indexOf(HTTPPARA)>-1) and (cmd.indexOf(HTTPPARA)>-1)) )
+
+  // if(strstr(wynik,"+HTTPACTION")){
+  //   // +HTTPACTION: 0,200,41 
+  //   char* last = strrchr(wynik, ',');   // znajdź ostatni przecinek
+
+  //   int value = 0;
+  //   if (last != NULL) {
+  //       this->my_lengthToRead = atoi(last + 1);       // zamień tekst po przecinku na liczbę
+  //   }
+  //   Serial.print("\n last +HTTPACTION -> ");
+  //   Serial.println(this->my_lengthToRead);            // wypisze: 65
+  // }
+
+  // if(wynik.indexOf(removeATPrefix("+HTTPREAD"))>-1){
+  //   //Serial.println(extractHttpData(wynik));
+  //   this->BUFF += extractHttpData(wynik);
+  // }
+
+  if(strstr(wynik,"+CIMI")){
+    const char* id_cstr = extractID(wynik);
+    memcpy(this->my_IMSI, id_cstr, strlen(id_cstr) + 1);   // +1 dla znaku końca '\0'
+    //if (DEBUG) Serial.println(this->my_IMSI);
+    
+  }
+
+  return wynik;
+}
+
+
+void SALGSMv1::set_serial(Stream * s){
+   this->my_serial = s;   // poprawne przypisanie
+}
+
+const char* SALGSMv1::IMSI(void){
+
+  if (strlen(this->my_IMSI)>8){
   }
   else{
-    this->sendAT("AT+CIMI",1200);
+    do {
+      this->STATUS=true;
+      this->sendAT("AT+CIMI",1200);
+    } while(this->STATUS==false);
   }
   return this->my_IMSI;
+}
+
+String SALGSMv1::CSQ(void){
+  return this->sendAT("AT+CSQ",1000);
 }
 
 String SALGSMv1::networks(void){
@@ -24,21 +125,58 @@ String SALGSMv1::bands(void){
 
 //EGSM_MODE,ALL_BAND
 String SALGSMv1::set_band(String band){
-  return this->sendAT("AT+CBAND="+band);
+  char c_payload[100];
+  snprintf(c_payload, sizeof(c_payload),"AT+CBAND=%s", band);
+  return this->sendAT(c_payload);
 }
 
-String SALGSMv1::reset(void){
-  STATUS = "OK"; 
-  return this->sendAT("AT+CFUN=1,1",8000);
+bool SALGSMv1::reset(void){
+  do{
+    this->STATUS=true;
+    this->sendAT("AT+CFUN=1,1",10000);
+  } while(this->STATUS==false);
+  return this->STATUS;
+}
+
+bool SALGSMv1::debug(){
+  return this->DEBUG;
 }
 
 bool SALGSMv1::con_to_internet(void){
-    this->sendAT("AT+CGATT=1");  //turn on internet
+  
+  do {
+    this->STATUS=true;
+    this->sendAT("AT+CGATT=1",3000);  //turn on internet
+  } while(this->STATUS==false);
+  
+  do {
+    this->STATUS=true;
+    this->sendAT("AT+CSTT=\"internet\"", 1500);
+  } while(this->STATUS==false);
+
+  do {
+    this->STATUS=true;
     this->sendAT("AT+SAPBR=3,1,\"CONTYPE\",\"GPRS\"");
-    this->sendAT("AT+SAPBR=3,1,\"APN\",\""+this->my_APN+"\"");
+  } while(this->STATUS==false);
+
+  do {
+    this->STATUS=true;
+    char c_payload[100];
+    snprintf(c_payload, sizeof(c_payload),"AT+SAPBR=3,1,\"APN\",\"%s\"", this->my_APN.c_str());
+    this->sendAT(c_payload,1000);
+  } while(this->STATUS==false);
+  
+  do {
+    this->STATUS=true;
     this->sendAT("AT+SAPBR=1,1");
+  } while(this->STATUS==false);
+
+  do {
+    this->STATUS=true;
     this->sendAT("AT+SAPBR=2,1");
-  return true;
+  } while(this->STATUS==false);
+
+  return this->STATUS;
 }
 
 void SALGSMv1::location_area_code(void){
@@ -75,97 +213,124 @@ void SALGSMv1::location_area_code(void){
 
 }
 
-String SALGSMv1::http_get_(String url, int wait){
-  url += "&lacDec="+String(this->lacDec)+"&cellDec="+String(this->cellDec)+"&netop="+this->network_operator+"&end=END";
-  this->sendAT("AT+HTTPINIT",wait);
-  this->sendAT("AT+HTTPPARA=\"CID\",1",wait);
-  this->sendAT("AT+HTTPPARA=\"URL\",\""+url+"\"",wait);
 
-  this->sendAT("AT+HTTPACTION=0",(3*wait));
+
+void SALGSMv1::http_get_(const char* cmd, int wait){
+  //url += "&lacDec="+String(this->lacDec)+"&cellDec="+String(this->cellDec)+"&netop="+this->network_operator;
+  char payload[20];
+  
+    
+  //snprintf(payload, sizeof(payload), "AT+HTTPINIT");
+  do {
+    this->STATUS=true;
+    this->sendAT("AT+HTTPINIT",1000);
+    //this->sendAT(payload);
+  } while(this->STATUS==false);
+
+  //snprintf(payload, sizeof(payload), "AT+HTTPPARA=\"CID\",1");
+  do {
+    this->STATUS=true;
+    this->sendAT("AT+HTTPPARA=\"CID\",1",1000);
+    //this->sendAT(payload,4000);
+  } while(this->STATUS==false);
+
+  do {
+    //char url[256];
+    //snprintf(url, sizeof(url), "AT+HTTPPARA=\"URL\",\"http://dlb.com.pl/api/v1/telemetry.php?ID=%s&KEY=%s&payload=%s\"",ID, KEY, payload);
+    this->STATUS=true;
+    //this->sendAT("AT+HTTPPARA=\"URL\",\"http://dlb.com.pl/api/v1/telemetry.php?ID=901405180011350&KEY=999&payload=xXx\"",2000);
+    this->sendAT(cmd,wait);
+  } while(this->STATUS==false);
+
+  delay(2000);
+
+  //snprintf(payload, sizeof(payload), "AT+HTTPACTION=0");
+  do {
+    this->STATUS=true;
+    this->sendAT("AT+HTTPACTION=0", 1000);
+  } while(this->STATUS==false);
 
   //nalezy poskladac do kupy odpowiedzi z tych dwoch zapytan
-  this->BUFF = "";
-  this->sendAT("AT+HTTPREAD=0,33",(3*wait));
-  if (this->my_lengthToRead > 33) this->sendAT("AT+HTTPREAD=33,66",(3*wait));
-  if (this->my_lengthToRead > 66) this->sendAT("AT+HTTPREAD=66,99",(3*wait));
+  // this->BUFF = "";
+  // this->sendAT("AT+HTTPREAD=0,33",(wait));
+  // if (this->my_lengthToRead > 33) this->sendAT("AT+HTTPREAD=33,66",(3*wait));
+  // if (this->my_lengthToRead > 66) this->sendAT("AT+HTTPREAD=66,99",(3*wait));
 
   this->sendAT("AT+HTTPTERM",wait);
 
-  if(this->STATUS == "OK")
-    return this->BUFF;
-  else
-    return this->STATUS;
+  return this->BUFF;
 }
 
 String SALGSMv1::get_ip(void){
   return this->sendAT("AT+SAPBR=2,1");
 }
 
-String SALGSMv1::sendAT(String cmd, int wait) {
-  String wynik = "";
-  char pom;
-  uint8_t n_pom=0;
-  while((!(wynik.indexOf(removeATPrefix(cmd))>-1)) or (wynik.indexOf("ERROR")>-1) and (this->STATUS == "OK")){ //zabezpieczyc przed zapetleniem
-    my_serial.println(cmd);
 
-    if(DEBUG){
-      Serial.print(">> ");
-      Serial.print(cmd);
-      Serial.print(" >>> ");
-      Serial.print(removeATPrefix(cmd));
-      Serial.print(" >>>> "); 
-    }
-    wynik = "";
-    unsigned long t0 = millis();
-    while (millis() - t0 < wait) {
-      if (my_serial.available()) {
-        pom = my_serial.read();
-        //Serial.write(pom);
-        delay(1); //??????
-        wynik += pom; 
-      }
-    }
-    n_pom++;
-    wynik = clean(wynik);
-    if(DEBUG) {
-      Serial.print(n_pom);
-      Serial.print("razy >> ");
-      Serial.println(wynik);
-    }
-    if (n_pom>5) this->STATUS = "AT_ERROR";
-  }
+
+void SALGSMv1::networkDiagnosis() {
+  Serial.println("\n=== NETWORK DIAGNOSIS ===");
   
-
-  if(wynik.indexOf(removeATPrefix("+HTTPACTION"))>-1){
-    String raw = "+HTTPACTION: 0,200,41";
-    int lastComma = wynik.lastIndexOf(',');   // szukamy ostatniego przecinka
-    String lengthStr = wynik.substring(lastComma + 1); // wszystko po przecinku
-    lengthStr.trim(); // usuwamy ewentualne spacje
-    this->my_lengthToRead = lengthStr.toInt();
-  }
-
-  if(wynik.indexOf(removeATPrefix("+HTTPREAD"))>-1){
-    //Serial.println(extractHttpData(wynik));
-    this->BUFF += extractHttpData(wynik);
-  }
-
-  if(wynik.indexOf(removeATPrefix("+CIMI"))>-1){
-    if (DEBUG) Serial.println(extractIMSI(wynik));
-    this->my_IMSI = extractIMSI(wynik);
-  }
-
-  return wynik;
+  // 1. Sygnał
+  Serial.print("1. Signal (CSQ): ");
+  String csq = this->sendAT("AT+CSQ", 2000);
+  Serial.println(csq);
+  
+  // 2. Rejestracja w sieci
+  Serial.print("2. Network reg (CREG): ");
+  Serial.println(this->sendAT("AT+CREG?", 2000));
+  
+  // 3. Operator
+  Serial.print("3. Operator (COPS): ");
+  Serial.println(this->sendAT("AT+COPS?", 2000));
+  
+  // 4. GPRS status
+  Serial.print("4. GPRS attach (CGATT): ");
+  Serial.println(this->sendAT("AT+CGATT?", 2000));
+  
+  // 5. Sprawdź IP
+  Serial.print("5. IP address (CIFSR): ");
+  Serial.println(this->sendAT("AT+SAPBR=2,1",2000));
+  
+  Serial.println("=== END DIAGNOSIS ===\n");
 }
 
-String SALGSMv1::removeATPrefix(String text) {
-  // Usuwa pierwsze wystąpienia "AT" z tekstu
-  text.remove(text.indexOf("AT"), 3); // usuwa 2 znaki: "A" i "T"
 
-  if(text.indexOf("=")>-1){
-    text.remove(text.indexOf("="), (text.length()-text.indexOf("=")));
-  }
-  return text;
-}
+// String SALGSMv1::removeATPrefix(String text) {
+//   // Usuwa pierwsze wystąpienia "AT" z tekstu
+//   text.remove(text.indexOf("AT"), 3); // usuwa 2 znaki: "A" i "T"
+
+//   if(text.indexOf("=")>-1){
+//     text.remove(text.indexOf("="), (text.length()-text.indexOf("=")));
+//   }
+//   return text;
+// }
+
+// const char* SALGSMv1::removeATPrefix(const char* text)
+// {
+//     static char buf[128];   // bufor wynikowy
+//     int j = 0;
+
+//     // Kopiujemy wejście do bufora
+//     for (int i = 0; text[i] != '\0' && j < sizeof(buf)-1; i++) {
+//         buf[j++] = text[i];
+//     }
+//     buf[j] = '\0';
+
+//     // Usuń pierwsze wystąpienie "AT"
+//     char* at_ptr = strstr(buf, "AT");
+//     if (at_ptr) {
+//         // przesuwamy resztę znaków w lewo, nadpisując "AT"
+//         memmove(at_ptr, at_ptr + 2, strlen(at_ptr + 2) + 1);
+//     }
+
+//     // Jeśli występuje "=", usuń wszystko od "=" do końca
+//     char* eq_ptr = strchr(buf, '=');
+//     if (eq_ptr) {
+//         *eq_ptr = '\0';
+//     }
+
+//     return buf;  // zwracamy wskaźnik do statycznego bufora
+// }
 
 
 bool SALGSMv1::waitForNetwork() {
@@ -183,31 +348,10 @@ bool SALGSMv1::waitForNetwork() {
   return false;
 }
 
-void SALGSMv1::httpGetGoogle() {
-  if (!waitForNetwork()) {
-    Serial.println("Błąd: brak sieci – ponawiam próbę za 10s...");
-    delay(10000);
-    waitForNetwork();
-  }
-
-  sendAT("AT+CHTTPCREATE=\"google.com\"");
-  delay(1000);
-  sendAT("AT+CHTTPCON=0"); // połącz z sesją 0
-  delay(1000);
-
-  // Wysłanie zapytania HTTP GET
-  sendAT("AT+CHTTPSEND=0,\"GET / HTTP/1.1\\r\\nHost: google.com\\r\\nConnection: close\\r\\n\\r\\n\"");
-  delay(4000);
-
-  // Odczyt odpowiedzi
-  Serial.println("Odpowiedź HTTP:");
-  sendAT("AT+CHTTPRECV=0,512");
-  delay(1000);
-
-  // Zamknięcie sesji
-  sendAT("AT+CHTTPDISCON=0");
-  sendAT("AT+CHTTPDESTROY=0");
+void SALGSMv1::setDEBUG(bool state){
+  this->DEBUG = state;
 }
+
 
 // Funkcja wysyłania prostego HTTP POST przez TCP socket
 void SALGSMv1::sendHTTPPOST(const char* host, int port, const char* path, const char* data) {
@@ -231,12 +375,12 @@ void SALGSMv1::sendHTTPPOST(const char* host, int port, const char* path, const 
   sendAT("AT+CSOCL=0");
 }
 
-String SALGSMv1::clean(String s) {
-  if (s.startsWith("\xEF\xBB\xBF")) {
-    return s.substring(3);
-  }
-  return s;
-}
+// String SALGSMv1::clean(String s) {
+//   if (s.startsWith("\xEF\xBB\xBF")) {
+//     return s.substring(3);
+//   }
+//   return s;
+// }
 
 String SALGSMv1::extractHttpData(String raw) {
   int start = raw.indexOf("+HTTPREAD:");
@@ -278,23 +422,67 @@ void SALGSMv1::sendSMS(String number, String msg) {
   sendAT("AT+CMGS=\"+48609105069\"");
   delay(500);
 
-  my_serial.println("TEST SMS z modulu GSMSALv1");
+  my_serial->println("TEST SMS z modulu GSMSALv1");
   delay(200);
 
-  my_serial.write(26); // CTRL+Z
-  my_serial.write(26); // CTRL+Z
+  my_serial->write(26); // CTRL+Z
+  my_serial->write(26); // CTRL+Z
 
 }
 
-String SALGSMv1::extractIMSI(String resp) {
-  resp.replace("\r", "");
-  resp.replace("\n", "");
-  resp.replace(" ", "");
+// String SALGSMv1::extractIMSI(String resp) {
+//   resp.replace("\r", "");
+//   resp.replace("\n", "");
+//   resp.replace(" ", "");
 
-  // usuń "AT+CIMI" jeśli występuje
-  resp.replace("AT+CIMI", "");
-  resp.replace("OK", "");
+//   // usuń "AT+CIMI" jeśli występuje
+//   resp.replace("AT+CIMI", "");
+//   resp.replace("OK", "");
 
-  // zostaje tylko cyfrowy IMSI
-  return resp;
+//   // zostaje tylko cyfrowy IMSI
+//   return resp;
+// }
+
+  // Dodatkowe funkcje pomocnicze
+bool SALGSMv1::isModuleAlive(void) {
+  String response = this->sendAT("AT", 2000);
+  return response.indexOf("OK") != -1;
+}
+
+int SALGSMv1::parseHTTPAction(String response) {
+  // Szukaj pattern: +HTTPACTION: 0,200,1234
+  int start = response.indexOf("+HTTPACTION:");
+  if (start == -1) return -1;
+  
+  int comma1 = response.indexOf(',', start);
+  int comma2 = response.indexOf(',', comma1 + 1);
+  
+  if (comma1 == -1 || comma2 == -1) return -1;
+  
+  return response.substring(comma1 + 1, comma2).toInt();
+}
+
+int SALGSMv1::getHTTPContentLength() {
+  // Możesz dodać parsowanie długości z odpowiedzi AT+HTTPACTION
+  // Tymczasowo zwróć domyślną wartość
+  return 100; // lub odczytaj z odpowiedzi modułu
+}
+
+
+const char* SALGSMv1::extractID(const char* resp)
+{
+    static char imsi[32];   // miejsce na wynik
+    int j = 0;
+
+    // przejdź przez cały tekst i wyciągnij tylko cyfry
+    for (int i = 0; resp[i] != '\0'; i++) {
+        if (resp[i] >= '0' && resp[i] <= '9') {
+            if (j < sizeof(imsi) - 1) {
+                imsi[j++] = resp[i];
+            }
+        }
+    }
+
+    imsi[j] = '\0'; // zakończ string
+    return imsi;
 }
