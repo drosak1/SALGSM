@@ -209,7 +209,7 @@ void loop() {
     char url[160];
     char ID_[50] = "901405180011350";
     char KEY_[10] = "9999";
-    snprintf(url, sizeof(url), "AT+HTTPPARA=\"URL\",\"http://dlb.com.pl/api/v1/telemetry.php?ID=%s&KEY=%s&mail=%s&mail_title=%s&payload=%s\"",ID_, KEY_, mail, title,message);
+    snprintf(url, sizeof(url), "AT+HTTPPARA=\"URL\",\"http://dlb.com.pl/api/v1/telemetry.php?ID=%s&KEY=%s&mail=%s&mail_title=%s&message=%s\"",ID_, KEY_, mail, title,message);
     int x=0;
     // while(url[x] != NULL){
     //   Serial.write(url[x]);
@@ -383,8 +383,12 @@ void http_get_(const char* cmd){
 
   GSM.println("AT+HTTPACTION=0");
 
-  delay(2000);
+  delay(4000);
   
-  GSM.println("AT+HTTPTERM");
+  GSM.println("AT+HTTPREAD=0,100");
+    
+  delay(2000);
 
+  GSM.println("AT+HTTPTERM");
+  
 }
