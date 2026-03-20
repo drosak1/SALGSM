@@ -12,49 +12,31 @@
 
 class SALGSMv1 {
 public:
-  SALGSMv1(String APN, bool debug);
-  void set_serial(Stream* s);
-  String init(void);
-  const char* IMSI(void);
-  String networks(void);
-  String bands(void);
-  String CSQ(void);
-  String set_band(String band);
-  bool reset(void);
+  SALGSMv1(Stream * serial, const char* APN, bool debug);
+  const char* sendAT(const char* cmd, char* out, size_t outSize, unsigned long timeout = 2000);
+  void clear(char* buf, size_t size);
+  const char* init(void);
+
+  void IMSI(void);
   bool con_to_internet(void);
-  String get_ip(void);
-  bool waitForNetwork(void);
-  void http_get_(const char* cmd, int wait = 1000);
-  void httpGetGoogle(void);
-  void sendHTTPPOST(const char* host, int port, const char* path, const char* data);
-  void location_area_code(void);
-  void sendSMS(String number, String msg);
-  void setDEBUG(bool state);
-  void networkDiagnosis();
-  bool debug();
-  bool STATUS = true; //"AT_ERROR", 
-  String sendAT(const char* cmd, int wait = 3000);
+
+  void http_get_(const char* cmd);
+
   const char* extractID(const char* resp);
+  //const char* IMSI(void);
+  bool reset(void);
+  bool isModuleAlive(void);
+
+  char my_IMSI [20] = {0};
+  char my_APN [100] = {0};
+  char IP [20] = {0};
 
 private:
-  bool DEBUG = false;
+  bool DEBUG = true;
+  bool STATUS = false;
+
   Stream* my_serial;
-  String my_APN = "";
-  const char* BUFF = "";
-  uint16_t my_lengthToRead = 0;
-  char my_IMSI [20] = "";
 
-  //location_area_code
-  long lacDec = 0;
-  long cellDec = 0;
-  String network_operator = "";
-
-  //const char*  removeATPrefix(const char*  text);
-  String extractHttpData(String raw);
-  //String extractIMSI(String resp);
-  int getHTTPContentLength();
-  int parseHTTPAction(String response);
-  bool isModuleAlive();
 };
 
 #endif
