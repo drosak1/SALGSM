@@ -7,7 +7,7 @@ SALGSMv1::SALGSMv1(Stream* serial, const char* APN, bool debug){
   this->my_APN[sizeof(this->my_APN)-1] = '\0';
 }
 
-const char* SALGSMv1::init(void){
+bool SALGSMv1::init(void){
 
   char response[200] = {0};
 
@@ -22,7 +22,9 @@ const char* SALGSMv1::init(void){
   this->IMSI();
   Serial.print("my_IMSI: "); Serial.println(my_IMSI);
 
-  this->con_to_internet();
+  if(this->con_to_internet()==false) this->reset_();
+
+  return true;
 
 }
 
@@ -45,44 +47,77 @@ void SALGSMv1::IMSI(void){
 
 bool SALGSMv1::con_to_internet(void){
   char response[200] = {0};
+  uint8_t count = 0;
 
+  this->STATUS = true;
+
+  count = 0;
   do{
     this->clear(response, sizeof(response));
     this->sendAT("AT+CGATT=1", response, sizeof(response), 3000);
     Serial.print("[con_to_internet()] AT+CGATT=1 -> "); Serial.println(response);
-  } while(strstr(response, "OK") == NULL);
+    count++;
+  } while((strstr(response, "OK") == NULL) and (count<2));
+  if (count>=2){
+    this->STATUS = false;
+  }
 
+  count = 0;
   do{
     this->clear(response, sizeof(response));
     this->sendAT("AT+CSTT=\"internet\"", response, sizeof(response), 1500);
     Serial.print("[con_to_internet()] AT+CSTT=\"internet\" -> "); Serial.println(response);
-  } while(strstr(response, "OK") == NULL);
+    count++;
+  } while((strstr(response, "OK") == NULL) and (count<3));
+  if (count>=3){
+    this->STATUS = false;
+  }
 
+  count = 0;
   do{
     this->clear(response, sizeof(response));
     this->sendAT("AT+SAPBR=3,1,\"CONTYPE\",\"GPRS\"", response, sizeof(response), 1000);
     Serial.print("[con_to_internet()] AT+CSTT=\"internet\" -> "); Serial.println(response);
-  } while(strstr(response, "OK") == NULL);
+    count++;
+  } while((strstr(response, "OK") == NULL) and (count<3));
+  if (count>=3){
+    this->STATUS = false;
+  }
 
+  count = 0;
   do{
     this->clear(response, sizeof(response));
     char c_payload[100];
     snprintf(c_payload, sizeof(c_payload),"AT+SAPBR=3,1,\"APN\",\"%s\"", this->my_APN);
     this->sendAT(c_payload, response, sizeof(response), 1000);
     Serial.print("[con_to_internet()] AT+SAPBR=3,1,\"CONTYPE\",\"GPRS\" -> "); Serial.println(response);
-  } while(strstr(response, "OK") == NULL);
+    count++;
+  } while((strstr(response, "OK") == NULL) and (count<3));
+  if (count>=3){
+    this->STATUS = false;
+  }
 
+  count = 0;
   do{
     this->clear(response, sizeof(response));
     this->sendAT("AT+SAPBR=1,1", response, sizeof(response), 2000);
     Serial.print("[con_to_internet()] AT+SAPBR=1,1 -> "); Serial.println(response);
-  } while(strstr(response, "OK") == NULL);
+    count++;
+  } while((strstr(response, "OK") == NULL) and (count<3));
+  if (count>=3){
+    this->STATUS = false;
+  }
  
+  count = 0;
   do{
     this->clear(response, sizeof(response));
     this->sendAT("AT+SAPBR=2,1", response, sizeof(response), 2000);
     Serial.print("[con_to_internet()] AT+SAPBR=1,1 -> "); Serial.println(response);
-  } while(strstr(response, "OK") == NULL);
+    count++;
+  } while((strstr(response, "OK") == NULL) and (count<3));
+  if (count>=3){
+    this->STATUS = false;
+  }
 
   //response posiada na ten moment numer IP
  char* ptr = strstr(response, "+SAPBR:");
@@ -105,35 +140,42 @@ void SALGSMv1::http_get_(const char* cmd){
   char response[200] = {0};
   //url += "&lacDec="+String(this->lacDec)+"&cellDec="+String(this->cellDec)+"&netop="+this->network_operator;
 
+  this->STATUS == true;
 
   this->clear(response, sizeof(response));
   this->sendAT("AT+HTTPINIT", response, sizeof(response), 2000);
-
+  if(strstr(response, "OK") == NULL) this->STATUS == false;
   delay(2000);
 
   this->clear(response, sizeof(response));
   this->sendAT("AT+HTTPPARA=\"CID\",1", response, sizeof(response), 2000);
-
+  if(strstr(response, "OK") == NULL) this->STATUS == false;
   delay(2000);
 
   this->clear(response, sizeof(response));
   this->sendAT(cmd, response, sizeof(response), 2000);
-
+  if(strstr(response, "OK") == NULL) this->STATUS == false;
   delay(2000);
 
   this->clear(response, sizeof(response));
   this->sendAT("AT+HTTPACTION=0", response, sizeof(response), 2000);
-
+  if(strstr(response, "OK") == NULL) this->STATUS == false;
   delay(4000);
   
   this->clear(response, sizeof(response));
   this->sendAT("AT+HTTPREAD=0,100", response, sizeof(response), 2000);
-    
+  if(strstr(response, "OK") == NULL) this->STATUS == false;  
   delay(2000);
 
   this->clear(response, sizeof(response));
   this->sendAT("AT+HTTPTERM", response, sizeof(response), 2000);
-  
+  if(strstr(response, "OK") == NULL) this->STATUS == false;
+
+  if(this->STATUS == false) {
+    //zapamietaj licznik w EEPROM
+    
+    this->reset_();
+  }
 }
 
 void SALGSMv1::clear(char* buf, size_t size) {
@@ -142,7 +184,7 @@ void SALGSMv1::clear(char* buf, size_t size) {
 
 const char* SALGSMv1::sendAT(const char* cmd, char* out, size_t outSize, unsigned long timeout = 2000) {
   size_t idx = 0;
-
+  //wdt_reset();
   this->my_serial->println(cmd);
   if (DEBUG) Serial.write("[DEBUG] ");
   unsigned long start = millis();
@@ -155,6 +197,7 @@ const char* SALGSMv1::sendAT(const char* cmd, char* out, size_t outSize, unsigne
         out[idx++] = c;
       }
     }
+    //wdt_reset();
   }
   if (DEBUG) Serial.write("[DEBUG END] ");
   out[idx] = '\0'; // ✅ zakończenie stringa
@@ -184,12 +227,8 @@ bool SALGSMv1::isModuleAlive(void) {
   return (strstr(response, "OK") != NULL);
 }
 
-bool SALGSMv1::reset(void){
-  char response[200] = {0};
-
-  do{
-    this->clear(response, sizeof(response));
-    this->sendAT("AT+CFUN=1,1", response, sizeof(response), 10000);
-    Serial.print("[reset()] AT+CFUN=1,1 -> "); Serial.println(response);
-  } while(strstr(response, "OK") == NULL);
+bool SALGSMv1::reset_(void){
+  if (DEBUG) Serial.println("RESET");
+  wdt_enable(WDTO_1S);
+  delay(15000);
 }

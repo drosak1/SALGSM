@@ -2,6 +2,7 @@
 #define SALGSMv1_H
 
 #include <Arduino.h>
+#include <avr/wdt.h>
 
 /*
   URUCHOMIENIE MODULU sygnalizowane nast komendami
@@ -15,7 +16,7 @@ public:
   SALGSMv1(Stream * serial, const char* APN, bool debug);
   const char* sendAT(const char* cmd, char* out, size_t outSize, unsigned long timeout = 2000);
   void clear(char* buf, size_t size);
-  const char* init(void);
+  bool init(void);
 
   void IMSI(void);
   bool con_to_internet(void);
@@ -24,7 +25,7 @@ public:
 
   const char* extractID(const char* resp);
   //const char* IMSI(void);
-  bool reset(void);
+  bool reset_(void);
   bool isModuleAlive(void);
 
   char my_IMSI [20] = {0};

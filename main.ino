@@ -2,7 +2,9 @@
 #include "SALGSMv1.h"
 #include <EEPROM.h>
 #include <SoftwareSerial.h>
-//#include <avr/wdt.h>
+#include <avr/wdt.h>
+
+void wdt_init(void) __attribute__((naked)) __attribute__((section(".init3")));
 
 SoftwareSerial GSM_serial(2, 3);  // RX = D2, TX = D3 (Dzielnik napięcia)
 /* _____                                   _____
@@ -19,17 +21,35 @@ SALGSMv1 GSM_dev(&GSM_serial, "sensor.net", true);
 
 char input[200];
 
+extern int __bss_end;
+extern int __heap_start;
 
 void setup() {
+  MCUSR = 0;      // bardzo ważne
+  wdt_disable(); 
+
+  clearRAM();     // opcjonalnie
+
+  pinMode(5, OUTPUT);
+  
   Serial.begin(9600);
   Serial.setTimeout(1000);  
   GSM_serial.begin(9600);
 
+  Serial.println("");
+  Serial.println("");
   Serial.println("START SYSTEMU");
 
-  //GSM_dev.reset();
-  //GSM_dev.init();
+  digitalWrite(5, LOW);
+  delay(100);
+  digitalWrite(5, HIGH);
+  delay(15000);
 
+  //GSM_dev.reset();
+  //wdt_reset();
+  GSM_dev.init();
+
+  //wdt_enable(WDTO_8S);
   
 }
 
@@ -37,6 +57,7 @@ void setup() {
 
 void loop() {
  delay(1000);
+ //wdt_reset();
 
  //AT+SENDSMS=+48609105069;hejhej;TESTTEST;;
   if (strstr(input, "SENDSMS") != NULL) {
@@ -66,8 +87,15 @@ void loop() {
 
     memset(input, 0, sizeof(input)); //czysci tablice
   }
- 
-  
+}
+
+
+void clearRAM() {
+  uint8_t* p = (uint8_t*)&__bss_end;
+
+  while (p < (uint8_t*)RAMEND) {
+    *p++ = 0;
+  }
 }
 
 void serialEvent() {
