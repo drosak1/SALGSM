@@ -1,5 +1,9 @@
 ## Repozytorium Gitea
 
+<p align="center">
+  <img src="GSMSALv1_.png" width="400"/>
+</p>
+
 AT+IPR=9600 -> ustawia transmisje na GSM
 
 Creating a new repository on the command line
