@@ -27,6 +27,7 @@ public:
   //const char* IMSI(void);
   bool reset_(void);
   bool isModuleAlive(void);
+  void setDEBUG(bool);
 
   char my_IMSI [20] = {0};
   char my_APN [100] = {0};

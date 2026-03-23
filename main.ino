@@ -87,6 +87,58 @@ void loop() {
 
     memset(input, 0, sizeof(input)); //czysci tablice
   }
+
+  //AT+SENDMAIL=david@wp.pl;hejhej;TESTTEST;;
+  if (strstr(input, "AT+SENDMAIL=") != NULL) {
+    char mail[40];
+    char message[50];
+    char title[50];
+
+    if (parse_(input, mail, title, message)) {
+        // Serial.println(phone);
+        // Serial.println(message);
+    }else
+    {
+        Serial.println("Błąd: Nie znaleziono średników!");
+        return;
+    }
+
+    char url[160];
+    char ID_[50] = "901405180011350";
+    char KEY_[10] = "9999";
+    snprintf(url, sizeof(url), "AT+HTTPPARA=\"URL\",\"http://dlb.com.pl/api/v1/telemetry.php?ID=%s&KEY=%s&mail=%s&mail_title=%s&message=%s\"",ID_, KEY_, mail, title,message);
+    int x=0;
+    // while(url[x] != NULL){
+    //   Serial.write(url[x]);
+    //   delay(1);
+    //   x++;
+    // }
+    // Serial.write("\n");
+
+    Serial.println("url -> OK ;-) ");
+
+    GSM_dev.http_get_(url);
+
+    memset(input, 0, sizeof(input)); //czysci tablice
+  }
+
+
+  if (strstr(input, "AT+DEBUG=1") != NULL) {
+    GSM_dev.setDEBUG(true);
+    memset(input, 0, sizeof(input)); //czysci tablice
+  }
+
+  if (strstr(input, "AT+DEBUG=0") != NULL) {
+    GSM_dev.setDEBUG(false);
+    memset(input, 0, sizeof(input)); //czysci tablice
+  }
+  
+  //if(receivedString.indexOf("AT+DIAG?")>-1) 
+  if (strstr(input, "AT+DIAG?") != NULL) { 
+    //GSM_dev.networkDiagnosis(); 
+    memset(input, 0, sizeof(input)); //czysci tablice
+  }
+
 }
 
 

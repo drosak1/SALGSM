@@ -173,7 +173,7 @@ void SALGSMv1::http_get_(const char* cmd){
 
   if(this->STATUS == false) {
     //zapamietaj licznik w EEPROM
-    
+
     this->reset_();
   }
 }
@@ -216,7 +216,6 @@ const char* SALGSMv1::extractID(const char* resp)
             }
         }
     }
-
     imsi[j] = '\0'; // zakończ string
     return imsi;
 }
@@ -232,3 +231,8 @@ bool SALGSMv1::reset_(void){
   wdt_enable(WDTO_1S);
   delay(15000);
 }
+
+void SALGSMv1::setDEBUG(bool state){
+  this->DEBUG = state;
+}
+
