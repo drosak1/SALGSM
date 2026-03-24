@@ -5,15 +5,19 @@
 #include <avr/wdt.h>
 //#include <avr/interrupt.h>
 
+// Sketch uses 10070 bytes (31%) of program storage space. Maximum is 32384 bytes.
+// Global variables use 1397 bytes (68%) of dynamic memory, leaving 651 bytes for local variables. Maximum is 2048 bytes.
+// Po przekroczeniu 68% dynamicznej pamieci system nie działa -> propozycja to przejscie na kontroler ATMEGA4809
+
 void wdt_init(void) __attribute__((naked)) __attribute__((section(".init3")));
 
 SoftwareSerial GSM_serial(2, 3);  // RX = D2, TX = D3 (Dzielnik napięcia)
 /* _____                                   _____
   |     |                                 |     |
-  |  M  |-> Rx <-------------------> Tx <-|  G  | 
+  |  M  |-< Rx[D2] <---------------- Tx <-|  G  | 
   |  C  |                                 |  S  |
-  |  U  |-> Tx[D3] <- (5V<->3.3V) -> Rx <-|  M  |
-  |_____|                                 |_____|
+  |  U  |-> Tx[D3] -- (5V<->3.3V) -> Rx >-|  M  |
+  |_____|-> [D4] -----GSM RESET --> RST >-|_____|
 */
 SALGSMv1 GSM_dev(&GSM_serial, "sensor.net", true);
 
@@ -32,7 +36,8 @@ uint16_t licznik = 0;
 bool s_event = false;
 
 unsigned long previousMillis = 0;
-const unsigned long interval = 15UL * 60UL * 1000UL; // 15 minut w ms
+
+const unsigned long interval = 1UL * 60UL * 1000UL; // 15 minut w ms
 
 void setup() {
   MCUSR = 0;      // bardzo ważne
@@ -66,16 +71,28 @@ void loop() {
   unsigned long currentMillis = millis();
   if (currentMillis - previousMillis >= interval) {
     previousMillis = currentMillis;
-
+    Serial.print(licznik);
     // Tutaj funkcja co 15 minut
-    Serial.println("Przerwanie 15 minut!");
+    Serial.println(" - przerwanie 15 minut!");
   }
  
   if (digitalRead(5) == LOW) { // zbocze opadające
     licznik++;
     delay(50);
     Serial.print("*");
+
+      // char url[200];
+      // char pom_buf[20];
+      // sprintf(pom_buf, "%d", licznik);
+      // snprintf(url, sizeof(url), "AT+HTTPPARA=\"URL\",\"http://dlb.com.pl/api/tlm/v1/set.php?did=1&imsi=%s&KEY=%s&payload=%s\"",GSM_dev.my_IMSI, KEY_, GSM_dev.IP, pom_buf);
+
+      // Serial.println("url -> OK ;-) ");
+
+      // GSM_dev.http_get_(url);
+
+      // memset(input, 0, sizeof(input)); //czysci tablice
   }
+
   delay(5);
   
   if(s_event){
