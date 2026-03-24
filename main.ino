@@ -7,7 +7,7 @@
 
 // Sketch uses 10070 bytes (31%) of program storage space. Maximum is 32384 bytes.
 // Global variables use 1397 bytes (68%) of dynamic memory, leaving 651 bytes for local variables. Maximum is 2048 bytes.
-// Po przekroczeniu 68% dynamicznej pamieci system nie działa -> propozycja to przejscie na kontroler ATMEGA4809
+// Po przekroczeniu 68% dynamicznej pamieci system nie działa -> propozycja to przejscie na kontroler ATMEGA4808-AF IC: mikrokontroler AVR; TQFP32; Interfejs: I2C,SPI,UPDI,USART x4
 
 void wdt_init(void) __attribute__((naked)) __attribute__((section(".init3")));
 
@@ -37,7 +37,7 @@ bool s_event = false;
 
 unsigned long previousMillis = 0;
 
-const unsigned long interval = 1UL * 60UL * 1000UL; // 15 minut w ms
+const unsigned long interval = 15UL * 60UL * 1000UL; // 15 minut w ms
 
 void setup() {
   MCUSR = 0;      // bardzo ważne
@@ -74,23 +74,19 @@ void loop() {
     Serial.print(licznik);
     // Tutaj funkcja co 15 minut
     Serial.println(" - przerwanie 15 minut!");
+      char url[200];
+      char pom_buf[20];
+      sprintf(pom_buf, "%d", licznik);
+      snprintf(url, sizeof(url), "AT+HTTPPARA=\"URL\",\"http://dlb.com.pl/api/tlm/v1/set.php?did=1&imsi=%s&KEY=%s&payload=%s\"",GSM_dev.my_IMSI, KEY_, GSM_dev.IP, pom_buf);
+      Serial.println("url -> OK ;-) ");
+      GSM_dev.http_get_(url);
+      memset(input, 0, sizeof(input)); //czysci tablice
   }
  
   if (digitalRead(5) == LOW) { // zbocze opadające
     licznik++;
     delay(50);
     Serial.print("*");
-
-      // char url[200];
-      // char pom_buf[20];
-      // sprintf(pom_buf, "%d", licznik);
-      // snprintf(url, sizeof(url), "AT+HTTPPARA=\"URL\",\"http://dlb.com.pl/api/tlm/v1/set.php?did=1&imsi=%s&KEY=%s&payload=%s\"",GSM_dev.my_IMSI, KEY_, GSM_dev.IP, pom_buf);
-
-      // Serial.println("url -> OK ;-) ");
-
-      // GSM_dev.http_get_(url);
-
-      // memset(input, 0, sizeof(input)); //czysci tablice
   }
 
   delay(5);
@@ -113,48 +109,32 @@ void loop() {
           Serial.println("[F];!");
           return;
       }
-
       char url[200];
       snprintf(url, sizeof(url), "AT+HTTPPARA=\"URL\",\"http://dlb.com.pl/api/v1/telemetry.php?ID=%s&KEY=%s&phone=%s&sms=%s\"",GSM_dev.my_IMSI, KEY_, phone, message);
-                                                      //http://dlb.com.pl/api/tlm/v1/set.php
       Serial.println("url -> OK ;-) ");
-
       GSM_dev.http_get_(url);
-
       memset(input, 0, sizeof(input)); //czysci tablice
     }
 
     //AT+SENDMAIL=david@wp.pl;TYTUL;WIADOMOSC;;
-    if (strstr(input, "AT+SENDMAIL=") != NULL) {
-      char mail[40];
-      char message[50];
-      char title[10];
+    // if (strstr(input, "AT+SENDMAIL=") != NULL) {
+    //   char mail[40];
+    //   char message[50];
+    //   char title[10];
 
-      if (parse_(input, mail, title, message)) {
-          // Serial.println(phone);
-          // Serial.println(message);
-      } else
-      {
-          Serial.println("[F];!");
-          return;
-      }
+    //   if (parse_(input, mail, title, message)) {
 
-      char url[200];
-      snprintf(url, sizeof(url), "AT+HTTPPARA=\"URL\",\"http://dlb.com.pl/api/v1/telemetry.php?ID=%s&KEY=%s&mail=%s&mail_title=%s&message=%s\"",GSM_dev.my_IMSI, KEY_, mail, title, message);
-      int x=0;
-      // while(url[x] != NULL){
-      //   Serial.write(url[x]);
-      //   delay(1);
-      //   x++;
-      // }
-      // Serial.write("\n");
-
-      Serial.println("url -> OK ;-) ");
-
-      GSM_dev.http_get_(url);
-
-      memset(input, 0, sizeof(input)); //czysci tablice
-    }
+    //   } else
+    //   {
+    //       Serial.println("[F];!");
+    //       return;
+    //   }
+    //   char url[200];
+    //   snprintf(url, sizeof(url), "AT+HTTPPARA=\"URL\",\"http://dlb.com.pl/api/v1/telemetry.php?ID=%s&KEY=%s&mail=%s&mail_title=%s&message=%s\"",GSM_dev.my_IMSI, KEY_, mail, title, message);
+    //   Serial.println("url -> OK ;-) ");
+    //   GSM_dev.http_get_(url);
+    //   memset(input, 0, sizeof(input)); //czysci tablice
+    // }
 
 
     // if (strstr(input, "AT+DEBUG=1") != NULL) {
