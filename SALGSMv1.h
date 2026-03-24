@@ -29,6 +29,8 @@ public:
   bool isModuleAlive(void);
   void setDEBUG(bool);
 
+  //void extractHttpData(String raw);
+
   char my_IMSI [20] = {0};
   char my_APN [100] = {0};
   char IP [20] = {0};

@@ -20,7 +20,9 @@ SALGSMv1 GSM_dev(&GSM_serial, "sensor.net", true);
 #define EEPROM_SIZE 1024  // Arduino Nano ma 1024 bajty EEPROM
 #define STRING_ADDR 0    // Adres początkowy dla stringa
 
-char input[200];
+char input[201];
+
+char KEY_[10] = "9999";
 
 extern int __bss_end;
 extern int __heap_start;
@@ -48,19 +50,14 @@ void setup() {
 
   Serial.println("");
   Serial.println("");
-  Serial.println("START SYSTEMU");
+  Serial.println("START");
 
   digitalWrite(4, LOW);
   delay(100);
   digitalWrite(4, HIGH);
   delay(15000);
 
-  //GSM_dev.reset();
-  //wdt_reset();
   GSM_dev.init();
-
-  //wdt_enable(WDTO_8S);
-  
 }
 
 
@@ -79,30 +76,30 @@ void loop() {
     delay(50);
     Serial.print("*");
   }
-
+  delay(5);
+  
   if(s_event){
-  //AT+SENDSMS=+48609105069;hejhej;TESTTEST;;
+    //AT+SENDSMS=+48609105069;TYTUL;WIADOMOSC-hej-hej;;
     if (strstr(input, "SENDSMS") != NULL) {
-
-      Serial.print("Znaleziono SENDSMS w: ");
+      s_event = false;
       Serial.println(input);
 
       char phone[20];
       char message[50];
       char title[10];
 
-      if (parse_(input, phone, message, title)) {
+      if (parse_(input, phone, title, message)) {
           Serial.println(phone);    // 48609105069
           Serial.println(message);  // dupa
-      }else
+      } else
       {
-          Serial.println("Błąd: Nie znaleziono średników!");
+          Serial.println("[F];!");
           return;
       }
 
-      char url[250];
-      char KEY_[10] = "9999";
+      char url[200];
       snprintf(url, sizeof(url), "AT+HTTPPARA=\"URL\",\"http://dlb.com.pl/api/v1/telemetry.php?ID=%s&KEY=%s&phone=%s&sms=%s\"",GSM_dev.my_IMSI, KEY_, phone, message);
+                                                      //http://dlb.com.pl/api/tlm/v1/set.php
       Serial.println("url -> OK ;-) ");
 
       GSM_dev.http_get_(url);
@@ -110,58 +107,55 @@ void loop() {
       memset(input, 0, sizeof(input)); //czysci tablice
     }
 
-    //AT+SENDMAIL=david@wp.pl;hejhej;TESTTEST;;
-    // if (strstr(input, "AT+SENDMAIL=") != NULL) {
-    //   char mail[40];
-    //   char message[50];
-    //   char title[50];
+    //AT+SENDMAIL=david@wp.pl;TYTUL;WIADOMOSC;;
+    if (strstr(input, "AT+SENDMAIL=") != NULL) {
+      char mail[40];
+      char message[50];
+      char title[10];
 
-    //   if (parse_(input, mail, title, message)) {
-    //       // Serial.println(phone);
-    //       // Serial.println(message);
-    //   }else
-    //   {
-    //       Serial.println("Błąd: Nie znaleziono średników!");
-    //       return;
-    //   }
+      if (parse_(input, mail, title, message)) {
+          // Serial.println(phone);
+          // Serial.println(message);
+      } else
+      {
+          Serial.println("[F];!");
+          return;
+      }
 
-    //   char url[160];
-    //   char ID_[50] = "901405180011350";
-    //   char KEY_[10] = "9999";
-    //   snprintf(url, sizeof(url), "AT+HTTPPARA=\"URL\",\"http://dlb.com.pl/api/v1/telemetry.php?ID=%s&KEY=%s&mail=%s&mail_title=%s&message=%s\"",ID_, KEY_, mail, title,message);
-    //   int x=0;
-    //   // while(url[x] != NULL){
-    //   //   Serial.write(url[x]);
-    //   //   delay(1);
-    //   //   x++;
-    //   // }
-    //   // Serial.write("\n");
+      char url[200];
+      snprintf(url, sizeof(url), "AT+HTTPPARA=\"URL\",\"http://dlb.com.pl/api/v1/telemetry.php?ID=%s&KEY=%s&mail=%s&mail_title=%s&message=%s\"",GSM_dev.my_IMSI, KEY_, mail, title, message);
+      int x=0;
+      // while(url[x] != NULL){
+      //   Serial.write(url[x]);
+      //   delay(1);
+      //   x++;
+      // }
+      // Serial.write("\n");
 
-    //   Serial.println("url -> OK ;-) ");
+      Serial.println("url -> OK ;-) ");
 
-    //   GSM_dev.http_get_(url);
+      GSM_dev.http_get_(url);
 
+      memset(input, 0, sizeof(input)); //czysci tablice
+    }
+
+
+    // if (strstr(input, "AT+DEBUG=1") != NULL) {
+    //   GSM_dev.setDEBUG(true);
     //   memset(input, 0, sizeof(input)); //czysci tablice
     // }
 
-
-    if (strstr(input, "AT+DEBUG=1") != NULL) {
-      GSM_dev.setDEBUG(true);
-      memset(input, 0, sizeof(input)); //czysci tablice
-    }
-
-    if (strstr(input, "AT+DEBUG=0") != NULL) {
-      GSM_dev.setDEBUG(false);
-      memset(input, 0, sizeof(input)); //czysci tablice
-    }
+    // if (strstr(input, "AT+DEBUG=0") != NULL) {
+    //   GSM_dev.setDEBUG(false);
+    //   memset(input, 0, sizeof(input)); //czysci tablice
+    // }
     
-    //if(receivedString.indexOf("AT+DIAG?")>-1) 
-    if (strstr(input, "AT+DIAG?") != NULL) { 
-      //GSM_dev.networkDiagnosis(); 
-      memset(input, 0, sizeof(input)); //czysci tablice
-    }
+    // //if(receivedString.indexOf("AT+DIAG?")>-1) 
+    // if (strstr(input, "AT+DIAG?") != NULL) { 
+    //   //GSM_dev.networkDiagnosis(); 
+    //   memset(input, 0, sizeof(input)); //czysci tablice
+    // }
 
-    s_event = false;
   }//s_event
 
 }
@@ -178,13 +172,16 @@ void clearRAM() {
 void serialEvent() {
     int pom=0;
     while (Serial.available()) {
+        s_event = true;
         char c = Serial.read();
         input[pom] = c;
+        input[pom+1]= '\0';
+        delay(1);
         pom++;
+        if(pom>200) pom = 0;
         //Serial.print(c);
         // obsłuż odebrany znak
     }
-    s_event = true;
 }
 
 bool parse_(const char* input, char* phone, char* text, char* title) {
