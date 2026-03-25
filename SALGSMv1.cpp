@@ -136,8 +136,9 @@ bool SALGSMv1::con_to_internet(void){
 }
 
 
-void SALGSMv1::http_get_(const char* cmd){
+bool SALGSMv1::http_get_(const char* cmd){
   char response[60] = {0};
+  bool status = false;
   //url += "&lacDec="+String(this->lacDec)+"&cellDec="+String(this->cellDec)+"&netop="+this->network_operator;
 
   this->STATUS == true;
@@ -167,6 +168,7 @@ void SALGSMv1::http_get_(const char* cmd){
   this->sendAT("AT+HTTPREAD=0,100", response, sizeof(response), 5000);
   if(strstr(response, "OK") == NULL) this->STATUS == false;  
   delay(2000);
+  if(strstr(response, "SET OK") != NULL) status = true;
 
   this->clear(response, sizeof(response));
   this->sendAT("AT+HTTPTERM", response, sizeof(response), 2000);
@@ -177,6 +179,8 @@ void SALGSMv1::http_get_(const char* cmd){
 
     this->reset_();
   }
+
+  return status;
 }
 
 void SALGSMv1::clear(char* buf, size_t size) {

@@ -103,9 +103,9 @@ void loop() {
       char url[200];
       char pom_buf[20];
       sprintf(pom_buf, "%d", licznik);
-      snprintf(url, sizeof(url), "AT+HTTPPARA=\"URL\",\"http://dlb.sytes.net/api/tlm/v1/set.php?did=1&imsi=%s&KEY=%s&payload=%s\"",GSM_dev.my_IMSI, KEY_, GSM_dev.IP, pom_buf);
+      snprintf(url, sizeof(url), "AT+HTTPPARA=\"URL\",\"http://dlb.sytes.net/api/tlm/v1/set.php?did=1&imsi=%s&key=%s&ip=%s&payload=%s\"",GSM_dev.my_IMSI, KEY_, GSM_dev.IP, pom_buf);
       Serial.println("url -> OK ;-) ");
-      GSM_dev.http_get_(url);
+      if(GSM_dev.http_get_(url))  licznik = 0;
       memset(input, 0, sizeof(input)); //czysci tablice
   }
  

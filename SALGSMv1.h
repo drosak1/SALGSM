@@ -21,7 +21,7 @@ public:
   void IMSI(void);
   bool con_to_internet(void);
 
-  void http_get_(const char* cmd);
+  bool http_get_(const char* cmd);
 
   const char* extractID(const char* resp);
   //const char* IMSI(void);
