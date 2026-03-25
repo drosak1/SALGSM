@@ -168,7 +168,7 @@ bool SALGSMv1::http_get_(const char* cmd){
   this->sendAT("AT+HTTPREAD=0,100", response, sizeof(response), 5000);
   if(strstr(response, "OK") == NULL) this->STATUS == false;  
   delay(2000);
-  if(strstr(response, "SET OK") != NULL) status = true;
+  if(strstr(response, "SETOK") != NULL) status = true;
 
   this->clear(response, sizeof(response));
   this->sendAT("AT+HTTPTERM", response, sizeof(response), 2000);

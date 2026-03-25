@@ -47,7 +47,7 @@ bool s_event = false;
 
 unsigned long previousMillis = 0;
 
-const unsigned long interval = 1UL * 60UL * 1000UL; // 15 minut w ms
+const unsigned long interval = 15UL * 60UL * 1000UL; // 15 minut w ms
 
 
 volatile unsigned long lastInterrupt = 0;
