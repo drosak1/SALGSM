@@ -1,9 +1,8 @@
 #include "Arduino.h"
 #include "SALGSMv1.h"
 #include <EEPROM.h>
-#include <SoftwareSerial.h>
 #include <avr/wdt.h>
-//#include <avr/interrupt.h>
+#include <avr/interrupt.h>
 
 // Sketch uses 10070 bytes (31%) of program storage space. Maximum is 32384 bytes.
 // Global variables use 1397 bytes (68%) of dynamic memory, leaving 651 bytes for local variables. Maximum is 2048 bytes.
@@ -11,15 +10,26 @@
 
 void wdt_init(void) __attribute__((naked)) __attribute__((section(".init3")));
 
-SoftwareSerial GSM_serial(2, 3);  // RX = D2, TX = D3 (Dzielnik napięcia)
+//#include <SoftwareSerial.h>
+//SoftwareSerial GSM_serial(2, 3);  // RX = D2, TX = D3 (Dzielnik napięcia)
+
+//#include <AltSoftSerial.h>
+//AltSoftSerial GSM_serial; // RX=8, TX=9
+
+//#include <AltSoftSerial.h>
+//AltSoftSerial GSM_serial; // RX=8, TX=9
+
+#include <NeoSWSerial.h>
+NeoSWSerial GSM_serial(7, 8); //
+
 /* _____                                   _____
   |     |                                 |     |
-  |  M  |-< Rx[D2] <---------------- Tx <-|  G  | 
-  |  C  |                                 |  S  |
-  |  U  |-> Tx[D3] -- (5V<->3.3V) -> Rx >-|  M  |
-  |_____|-> [D4] -----GSM RESET --> RST >-|_____|
+  |  C  |-< Rx[D7] <---------------- Tx <-|  G  | 
+  |  P  |                                 |  S  |
+  |  U  |-> Tx[D8] -> (5V -> 3.3V)-> Rx >-|  M  |
+  |_____|-< [D4] <----GSM RESET---- RST <-|_____|
 */
-SALGSMv1 GSM_dev(&GSM_serial, "sensor.net", true);
+SALGSMv1 GSM_dev(GSM_serial, "sensor.net", true);
 
 #define EEPROM_SIZE 1024  // Arduino Nano ma 1024 bajty EEPROM
 #define STRING_ADDR 0    // Adres początkowy dla stringa
@@ -37,7 +47,21 @@ bool s_event = false;
 
 unsigned long previousMillis = 0;
 
-const unsigned long interval = 15UL * 60UL * 1000UL; // 15 minut w ms
+const unsigned long interval = 1UL * 60UL * 1000UL; // 15 minut w ms
+
+
+volatile unsigned long lastInterrupt = 0;
+
+volatile bool przerwanie = false;
+
+void isr() {
+  unsigned long now = millis();
+  if (now - lastInterrupt > 70) {
+    licznik++;
+    lastInterrupt = now;
+    przerwanie = true;
+  }
+}
 
 void setup() {
   MCUSR = 0;      // bardzo ważne
@@ -47,7 +71,7 @@ void setup() {
 
   pinMode(4, OUTPUT);
 
-  pinMode(5, INPUT_PULLUP); // D5
+  pinMode(2, INPUT_PULLUP); //przerwanie
 
   Serial.begin(9600);
   Serial.setTimeout(1000);  
@@ -61,6 +85,8 @@ void setup() {
   delay(100);
   digitalWrite(4, HIGH);
   delay(15000);
+
+  attachInterrupt(digitalPinToInterrupt(2), isr, FALLING);
 
   GSM_dev.init();
 }
@@ -77,16 +103,15 @@ void loop() {
       char url[200];
       char pom_buf[20];
       sprintf(pom_buf, "%d", licznik);
-      snprintf(url, sizeof(url), "AT+HTTPPARA=\"URL\",\"http://dlb.com.pl/api/tlm/v1/set.php?did=1&imsi=%s&KEY=%s&payload=%s\"",GSM_dev.my_IMSI, KEY_, GSM_dev.IP, pom_buf);
+      snprintf(url, sizeof(url), "AT+HTTPPARA=\"URL\",\"http://dlb.sytes.net/api/tlm/v1/set.php?did=1&imsi=%s&KEY=%s&payload=%s\"",GSM_dev.my_IMSI, KEY_, GSM_dev.IP, pom_buf);
       Serial.println("url -> OK ;-) ");
       GSM_dev.http_get_(url);
       memset(input, 0, sizeof(input)); //czysci tablice
   }
  
-  if (digitalRead(5) == LOW) { // zbocze opadające
-    licznik++;
-    delay(50);
-    Serial.print("*");
+  if (przerwanie) { // zbocze opadające
+    Serial.println(licznik);
+    przerwanie = false;
   }
 
   delay(5);

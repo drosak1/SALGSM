@@ -13,7 +13,7 @@
 
 class SALGSMv1 {
 public:
-  SALGSMv1(Stream * serial, const char* APN, bool debug);
+  SALGSMv1(Stream & serial, const char* APN, bool debug);
   const char* sendAT(const char* cmd, char* out, size_t outSize, unsigned long timeout = 2000);
   void clear(char* buf, size_t size);
   bool init(void);

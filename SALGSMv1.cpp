@@ -1,8 +1,8 @@
 #include "SALGSMv1.h"
 //#include <avr/wdt.h>
 
-SALGSMv1::SALGSMv1(Stream* serial, const char* APN, bool debug){
-  this->my_serial = serial;
+SALGSMv1::SALGSMv1(Stream & serial, const char* APN, bool debug){
+  this->my_serial = &serial;
   strncpy(this->my_APN, APN, sizeof(this->my_APN)-1);
   this->my_APN[sizeof(this->my_APN)-1] = '\0';
 }

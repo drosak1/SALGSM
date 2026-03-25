@@ -151,3 +151,40 @@ AT+HTTPACTION=0
 OK
 
 +HTTPACTION: 0,200,12
+
+
+
+
+
+
+Twój przypadek (idealne użycie)
+
+Masz:
+
+for(uint8_t i = 0 ;i < head[1];i++){
+  str += char(data[i]);
+}
+
+👉 tutaj powinieneś zrobić:
+
+String str;
+str.reserve(head[1]);  // 🔥 kluczowe
+
+for(uint8_t i = 0 ;i < head[1];i++){
+  str += char(data[i]);
+}
+⚠️ Dlaczego to ważne
+
+Bez reserve():
+
+wiele malloc i free
+RAM się „dziurawi”
+po czasie → dziwne błędy / reset MCU
+
+Z reserve():
+
+jedna alokacja
+stabilne działanie
+❗ Ograniczenia
+jeśli przekroczysz rozmiar → i tak będzie realloc
+dalej używasz heap → nie jest to 100% safe
