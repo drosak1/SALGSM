@@ -71,7 +71,7 @@ void setup() {
 
   pinMode(4, OUTPUT);
 
-  pinMode(2, INPUT_PULLUP); //przerwanie
+  pinMode(2, INPUT); //przerwanie
 
   Serial.begin(9600);
   Serial.setTimeout(1000);  
