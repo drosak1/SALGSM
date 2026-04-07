@@ -22,6 +22,8 @@ void wdt_init(void) __attribute__((naked)) __attribute__((section(".init3")));
 #include <NeoSWSerial.h>
 NeoSWSerial GSM_serial(7, 8); //
 
+const unsigned long interval = 15UL * 60UL * 1000UL; // 15 minut w ms
+
 /* _____                                   _____
   |     |                                 |     |
   |  C  |-< Rx[D7] <---------------- Tx <-|  G  | 
@@ -30,11 +32,11 @@ NeoSWSerial GSM_serial(7, 8); //
   |_____|-< [D4] <----GSM RESET---- RST <-|_____|
   |     |-< [D2] <-LICZNIK
   |_____|
+
+  1 - ustaw czestosc -> const unsigned long interval = 15UL * 60UL * 1000UL; // 15 minut w ms
+  2 - 
 */
 SALGSMv1 GSM_dev(GSM_serial, "sensor.net", true);
-
-#define EEPROM_SIZE 1024  // Arduino Nano ma 1024 bajty EEPROM
-#define STRING_ADDR 0    // Adres początkowy dla stringa
 
 char input[201];
 
@@ -48,9 +50,6 @@ volatile unsigned long licznik = 0; //volatile - inaczej kompilator może robić
 bool s_event = false;
 
 unsigned long previousMillis = 0;
-
-const unsigned long interval = 15UL * 60UL * 1000UL; // 15 minut w ms
-
 
 volatile unsigned long lastInterrupt = 0;
 
@@ -67,7 +66,7 @@ data MyData;
 
 void isr() {
   unsigned long now = millis();
-  if (now - lastInterrupt > 70) {
+  if (now - lastInterrupt > 100) {
     licznik++;
     lastInterrupt = now;
     przerwanie = true;
@@ -82,11 +81,14 @@ void setup() {
 
   pinMode(4, OUTPUT);
 
-  pinMode(2, INPUT); //przerwanie
+  pinMode(2, INPUT_PULLUP); //przerwanie
 
   Serial.begin(9600);
   Serial.setTimeout(1000);  
   GSM_serial.begin(9600);
+
+  Serial.println("");
+  Serial.println("START v1");
 
   /////////////////////EEPROM //////////////////////////////////////////////////////////
   do{
@@ -100,9 +102,6 @@ void setup() {
 
   licznik = MyData.value;
   /////////////////////EEPROM  END/////////////////////////////////////////////////////
-
-  Serial.println("");
-  Serial.println("START v1");
 
   digitalWrite(4, LOW);
   delay(100);
@@ -122,7 +121,6 @@ void loop() {
 
   if (currentMillis - previousMillis >= interval) {
     previousMillis = currentMillis;
-    Serial.print(licznik);
 
     noInterrupts();       // wyłącz przerwania
       MyData.value = MyData.value + licznik;
@@ -134,10 +132,11 @@ void loop() {
     EEPROM.put(startAddr, MyData);
 
     // Tutaj funkcja co 15 minut
+    Serial.print(MyData.value);
     Serial.println(" - przerwanie 15 minut!");
       char url[200];
       char pom_buf[20];
-      sprintf(pom_buf, "%d", licznik);
+      sprintf(pom_buf, "%lu", MyData.value);
       snprintf(url, sizeof(url), "AT+HTTPPARA=\"URL\",\"http://dlb.com.pl/api/tlm/v1/set.php?did=1&imsi=%s&key=%s&ip=%s&payload=%s\"",GSM_dev.my_IMSI, KEY_, GSM_dev.IP, pom_buf);
       Serial.println("url -> OK ;-) ");
       if(GSM_dev.http_get_(url))  Serial.println("htt_get_()!");

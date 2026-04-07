@@ -9,15 +9,14 @@ SALGSMv1::SALGSMv1(Stream & serial, const char* APN, bool debug){
 
 bool SALGSMv1::init(void){
 
-  char response[200] = {0};
+  //char response[200] = {0};
 
-  this->sendAT("AT+CSQ", response, sizeof(response), 2000);
+  //this->sendAT("AT+CSQ", response, sizeof(response), 1000);
 
-  Serial.println(response);
-  this->clear(response, sizeof(response));
+  //Serial.println(response);
+  //this->clear(response, sizeof(response));
 
-  delay(1200);
-
+  //delay(1200);
 
   this->IMSI();
   Serial.print("my_IMSI: "); Serial.println(my_IMSI);
@@ -30,7 +29,7 @@ bool SALGSMv1::init(void){
 
 void SALGSMv1::IMSI(void){
   char response[200] = {0};
-
+  Serial.println("IMSI()");
   this->sendAT("AT+CIMI", response, sizeof(response), 2000);
   this->extractID(response);
 
@@ -168,7 +167,7 @@ bool SALGSMv1::http_get_(const char* cmd){
   this->sendAT("AT+HTTPREAD=0,100", response, sizeof(response), 5000);
   if(strstr(response, "OK") == NULL) this->STATUS == false;  
   delay(2000);
-  if(strstr(response, "SETOK") != NULL) status = true;
+  if(strstr(response, "SETOK") != NULL) status = true; //<-tutaj odpowiedz z serwera
 
   this->clear(response, sizeof(response));
   this->sendAT("AT+HTTPTERM", response, sizeof(response), 2000);
@@ -187,7 +186,7 @@ void SALGSMv1::clear(char* buf, size_t size) {
   memset(buf, 0, size);
 }
 
-const char* SALGSMv1::sendAT(const char* cmd, char* out, size_t outSize, unsigned long timeout = 2000) {
+void SALGSMv1::sendAT(const char* cmd, char* out, size_t outSize, unsigned long timeout = 2000) {
   size_t idx = 0;
   //wdt_reset();
   this->my_serial->println(cmd);
