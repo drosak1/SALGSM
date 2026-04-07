@@ -28,6 +28,8 @@ NeoSWSerial GSM_serial(7, 8); //
   |  P  |                                 |  S  |
   |  U  |-> Tx[D8] -> (5V -> 3.3V)-> Rx >-|  M  |
   |_____|-< [D4] <----GSM RESET---- RST <-|_____|
+  |     |-< [D2] <-LICZNIK
+  |_____|
 */
 SALGSMv1 GSM_dev(GSM_serial, "sensor.net", true);
 
@@ -100,8 +102,7 @@ void setup() {
   /////////////////////EEPROM  END/////////////////////////////////////////////////////
 
   Serial.println("");
-  Serial.println("");
-  Serial.println("START");
+  Serial.println("START v1");
 
   digitalWrite(4, LOW);
   delay(100);
@@ -118,7 +119,7 @@ void setup() {
 
 void loop() {
   unsigned long currentMillis = millis();
-  
+
   if (currentMillis - previousMillis >= interval) {
     previousMillis = currentMillis;
     Serial.print(licznik);
@@ -129,6 +130,7 @@ void loop() {
     interrupts();         // włącz przerwania
 
     MyData.write_counter = MyData.write_counter + 1;
+    if (MyData.write_counter>60000) { startAddr = startAddr + sizeof(MyData) + 1; MyData.write_counter = 1; }
     EEPROM.put(startAddr, MyData);
 
     // Tutaj funkcja co 15 minut

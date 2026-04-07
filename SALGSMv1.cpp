@@ -176,7 +176,7 @@ bool SALGSMv1::http_get_(const char* cmd){
 
   if(this->STATUS == false) {
     //zapamietaj licznik w EEPROM
-
+    //odp. zapemietany przed wysłaniem http
     this->reset_();
   }
 
