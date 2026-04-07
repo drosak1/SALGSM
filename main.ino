@@ -41,7 +41,7 @@ char KEY_[10] = "9999";
 extern int __bss_end;
 extern int __heap_start;
 
-uint16_t licznik = 0;
+volatile unsigned long licznik = 0; //volatile - inaczej kompilator może robić optymalizacje i będą błędy
 
 bool s_event = false;
 
@@ -53,6 +53,15 @@ const unsigned long interval = 15UL * 60UL * 1000UL; // 15 minut w ms
 volatile unsigned long lastInterrupt = 0;
 
 volatile bool przerwanie = false;
+
+uint8_t startAddr = 0;
+
+struct data {
+  uint16_t write_counter;
+  unsigned long value;
+};
+
+data MyData;
 
 void isr() {
   unsigned long now = millis();
@@ -77,6 +86,19 @@ void setup() {
   Serial.setTimeout(1000);  
   GSM_serial.begin(9600);
 
+  /////////////////////EEPROM //////////////////////////////////////////////////////////
+  do{
+    EEPROM.get(startAddr, MyData);
+    if (MyData.write_counter==65535){ //czyszczenie EEPROM przy pierwszym uruchomieniu licznika
+      for (int i = 0; i < EEPROM.length(); i++) EEPROM.update(i, 0);
+    }
+    else if (MyData.write_counter>60000) startAddr = startAddr + sizeof(MyData) + 1;
+    Serial.print("adr-> "); Serial.print(startAddr); Serial.print(" E->w_c-> "); Serial.print(MyData.write_counter); Serial.print(" E->val-> "); Serial.println(MyData.value);
+  }while(MyData.write_counter>60000);
+
+  licznik = MyData.value;
+  /////////////////////EEPROM  END/////////////////////////////////////////////////////
+
   Serial.println("");
   Serial.println("");
   Serial.println("START");
@@ -89,15 +111,26 @@ void setup() {
   attachInterrupt(digitalPinToInterrupt(2), isr, FALLING);
 
   GSM_dev.init();
+
 }
 
 
 
 void loop() {
   unsigned long currentMillis = millis();
+  
   if (currentMillis - previousMillis >= interval) {
     previousMillis = currentMillis;
     Serial.print(licznik);
+
+    noInterrupts();       // wyłącz przerwania
+      MyData.value = MyData.value + licznik;
+      licznik = 0;
+    interrupts();         // włącz przerwania
+
+    MyData.write_counter = MyData.write_counter + 1;
+    EEPROM.put(startAddr, MyData);
+
     // Tutaj funkcja co 15 minut
     Serial.println(" - przerwanie 15 minut!");
       char url[200];
@@ -105,41 +138,41 @@ void loop() {
       sprintf(pom_buf, "%d", licznik);
       snprintf(url, sizeof(url), "AT+HTTPPARA=\"URL\",\"http://dlb.com.pl/api/tlm/v1/set.php?did=1&imsi=%s&key=%s&ip=%s&payload=%s\"",GSM_dev.my_IMSI, KEY_, GSM_dev.IP, pom_buf);
       Serial.println("url -> OK ;-) ");
-      if(GSM_dev.http_get_(url))  licznik = 0;
+      if(GSM_dev.http_get_(url))  Serial.println("htt_get_()!");
       memset(input, 0, sizeof(input)); //czysci tablice
   }
  
   if (przerwanie) { // zbocze opadające
-    Serial.println(licznik);
+    Serial.print("*");
     przerwanie = false;
   }
 
-  delay(5);
+  //delay(5);
   
   if(s_event){
     //AT+SENDSMS=+48609105069;TYTUL;WIADOMOSC-hej-hej;;
-    if (strstr(input, "SENDSMS") != NULL) {
-      s_event = false;
-      Serial.println(input);
+    // if (strstr(input, "SENDSMS") != NULL) {
+    //   s_event = false;
+    //   Serial.println(input);
 
-      char phone[20];
-      char message[50];
-      char title[10];
+    //   char phone[20];
+    //   char message[50];
+    //   char title[10];
 
-      if (parse_(input, phone, title, message)) {
-          Serial.println(phone);    // 48609105069
-          Serial.println(message);  // dupa
-      } else
-      {
-          Serial.println("[F];!");
-          return;
-      }
-      char url[200];
-      snprintf(url, sizeof(url), "AT+HTTPPARA=\"URL\",\"http://dlb.com.pl/api/v1/telemetry.php?ID=%s&KEY=%s&phone=%s&sms=%s\"",GSM_dev.my_IMSI, KEY_, phone, message);
-      Serial.println("url -> OK ;-) ");
-      GSM_dev.http_get_(url);
-      memset(input, 0, sizeof(input)); //czysci tablice
-    }
+    //   if (parse_(input, phone, title, message)) {
+    //       Serial.println(phone);    // 48609105069
+    //       Serial.println(message);  // dupa
+    //   } else
+    //   {
+    //       Serial.println("[F];!");
+    //       return;
+    //   }
+    //   char url[200];
+    //   snprintf(url, sizeof(url), "AT+HTTPPARA=\"URL\",\"http://dlb.com.pl/api/v1/telemetry.php?ID=%s&KEY=%s&phone=%s&sms=%s\"",GSM_dev.my_IMSI, KEY_, phone, message);
+    //   Serial.println("url -> OK ;-) ");
+    //   GSM_dev.http_get_(url);
+    //   memset(input, 0, sizeof(input)); //czysci tablice
+    // }
 
     //AT+SENDMAIL=david@wp.pl;TYTUL;WIADOMOSC;;
     // if (strstr(input, "AT+SENDMAIL=") != NULL) {
