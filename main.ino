@@ -1,3 +1,5 @@
+//Dziala tylko na ATMEGA328P nie dziala na ATMEG
+
 #include "Arduino.h"
 #include "SALGSMv1.h"
 #include <EEPROM.h>
@@ -34,7 +36,6 @@ const unsigned long interval = 15UL * 60UL * 1000UL; // 15 minut w ms
   |_____|
 
   1 - ustaw czestosc -> const unsigned long interval = 15UL * 60UL * 1000UL; // 15 minut w ms
-  2 - 
 */
 SALGSMv1 GSM_dev(GSM_serial, "sensor.net", true);
 

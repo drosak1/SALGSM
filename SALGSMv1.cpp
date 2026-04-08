@@ -15,21 +15,24 @@ bool SALGSMv1::init(void){
 
   //Serial.println(response);
   //this->clear(response, sizeof(response));
-
-  //delay(1200);
-
-  this->IMSI();
-  Serial.print("my_IMSI: "); Serial.println(my_IMSI);
+  uint8_t pom=0;
+  do{
+    delay(1000);
+    this->IMSI();
+    Serial.print("IMSI: "); Serial.println(my_IMSI);
+    pom++;
+    if(pom>100) { Serial.println("RESET"); this->reset_(); }
+  }while(strlen(this->my_IMSI)<5);
 
   if(this->con_to_internet()==false) this->reset_();
-
+  
   return true;
 
 }
 
 void SALGSMv1::IMSI(void){
   char response[200] = {0};
-  Serial.println("IMSI()");
+
   this->sendAT("AT+CIMI", response, sizeof(response), 2000);
   this->extractID(response);
 
