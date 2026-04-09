@@ -98,7 +98,7 @@ void setup() {
       for (int i = 0; i < EEPROM.length(); i++) EEPROM.update(i, 0);
     }
     else if (MyData.write_counter>60000) startAddr = startAddr + sizeof(MyData) + 1;
-    Serial.print("adr-> "); Serial.print(startAddr); Serial.print(" E->w_c-> "); Serial.print(MyData.write_counter); Serial.print(" E->val-> "); Serial.println(MyData.value);
+    Serial.print("adr->"); Serial.print(startAddr); Serial.print(" E.w_c->"); Serial.print(MyData.write_counter); Serial.print(" E.val->"); Serial.println(MyData.value);
   }while(MyData.write_counter>60000);
 
   licznik = MyData.value;
