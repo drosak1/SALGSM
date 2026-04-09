@@ -10,9 +10,7 @@ SALGSMv1::SALGSMv1(Stream & serial, const char* APN, bool debug){
 bool SALGSMv1::init(void){
 
   //char response[200] = {0};
-
   //this->sendAT("AT+CSQ", response, sizeof(response), 1000);
-
   //Serial.println(response);
   //this->clear(response, sizeof(response));
   uint8_t pom=0;
@@ -21,10 +19,10 @@ bool SALGSMv1::init(void){
     this->IMSI();
     Serial.print("IMSI: "); Serial.println(my_IMSI);
     pom++;
-    if(pom>100) { Serial.println("RESET"); this->reset_(); }
+    if(pom>10) { Serial.println("RESET"); this->reset_(); }
   }while(strlen(this->my_IMSI)<5);
 
-  if(this->con_to_internet()==false) this->reset_();
+  if(this->con_to_internet()==false) { Serial.println("RESET"); this->reset_(); }
   
   return true;
 
@@ -127,6 +125,7 @@ bool SALGSMv1::con_to_internet(void){
     if (sscanf(ptr, "+SAPBR: %*d,%*d,\"%19[^\"]\"", this->IP) == 1) {
       Serial.print("IP: ");
       Serial.println(this->IP);
+      this->STATUS = true;
     } else {
       Serial.println("Blad IP");
     }
