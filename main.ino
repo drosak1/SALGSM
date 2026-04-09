@@ -140,7 +140,19 @@ void loop() {
       sprintf(pom_buf, "%lu", MyData.value);
       snprintf(url, sizeof(url), "AT+HTTPPARA=\"URL\",\"http://dlb.com.pl/api/tlm/v1/set.php?did=1&imsi=%s&key=%s&ip=%s&payload=%s\"",GSM_dev.my_IMSI, KEY_, GSM_dev.IP, pom_buf);
       Serial.println("url -> OK ;-) ");
-      if(GSM_dev.http_get_(url))  Serial.println("htt_get_()!");
+      if(GSM_dev.http_get_(url))  {
+        Serial.println("htt_get_()!");
+      }
+      else
+      {
+        if(GSM_dev.http_get_(url))  {
+          Serial.println("htt_get_()!");
+        }
+        else
+        {
+          GSM_dev.reset_(); // restart systemu, podwójna proba wyslania danych na serwer
+        }
+      }
       memset(input, 0, sizeof(input)); //czysci tablice
   }
  
