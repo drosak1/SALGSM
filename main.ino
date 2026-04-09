@@ -56,6 +56,8 @@ volatile unsigned long lastInterrupt = 0;
 
 volatile bool przerwanie = false;
 
+volatile uint16_t eprom_write_number = 60000;
+
 uint8_t startAddr = 0;
 
 struct data {
@@ -92,22 +94,33 @@ void setup() {
   Serial.println("START v1");
 
   /////////////////////EEPROM //////////////////////////////////////////////////////////
-  do{
-    EEPROM.get(startAddr, MyData);
-    if (MyData.write_counter==65535){ //czyszczenie EEPROM przy pierwszym uruchomieniu licznika
-      for (int i = 0; i < EEPROM.length(); i++) EEPROM.update(i, 0);
-    }
-    else if (MyData.write_counter>60000) startAddr = startAddr + sizeof(MyData) + 1;
-    Serial.print("adr->"); Serial.print(startAddr); Serial.print(" E.w_c->"); Serial.print(MyData.write_counter); Serial.print(" E.val->"); Serial.println(MyData.value);
-  }while(MyData.write_counter>60000);
+  EEPROM.get(startAddr, MyData);
+  if (MyData.write_counter==65535){ for (int i = 0; i < EEPROM.length(); i++) EEPROM.update(i, 0); } //czyszczenie EEPROM przy pierwszym uruchomieniu licznika
+  Serial.print("adr->"); Serial.print(startAddr); Serial.print(" E.w_c->"); Serial.print(MyData.write_counter); Serial.print(" E.val->"); Serial.println(MyData.value);
 
-  licznik = MyData.value;
+  noInterrupts();       // wyłącz przerwania
+    licznik = MyData.value;
+  interrupts();         // włącz przerwania
+
+  while(MyData.write_counter == eprom_write_number){
+    startAddr = startAddr + sizeof(MyData) + 1;
+    EEPROM.get(startAddr, MyData);
+
+    
+    noInterrupts();       // wyłącz przerwania
+      if(licznik<MyData.value) licznik = MyData.value;
+    interrupts();         // włącz przerwania
+
+
+    Serial.print("adr->"); Serial.print(startAddr); Serial.print(" E.w_c->"); Serial.print(MyData.write_counter); Serial.print(" E.val->"); Serial.println(MyData.value);
+  }
+
   /////////////////////EEPROM  END/////////////////////////////////////////////////////
 
   digitalWrite(4, LOW);
   delay(100);
   digitalWrite(4, HIGH);
-  delay(15000);
+  //delay(15000);
 
   attachInterrupt(digitalPinToInterrupt(2), isr, FALLING);
 
@@ -124,12 +137,13 @@ void loop() {
     previousMillis = currentMillis;
 
     noInterrupts();       // wyłącz przerwania
-      MyData.value = MyData.value + licznik;
-      licznik = 0;
+      MyData.value = licznik;
     interrupts();         // włącz przerwania
+    Serial.print("licznik -> ");
+    Serial.println(MyData.value);
 
     MyData.write_counter = MyData.write_counter + 1;
-    if (MyData.write_counter>60000) { startAddr = startAddr + sizeof(MyData) + 1; MyData.write_counter = 1; }
+    if (MyData.write_counter > eprom_write_number) { startAddr = startAddr + sizeof(MyData) + 1; MyData.write_counter = 1; }
     EEPROM.put(startAddr, MyData);
 
     // Tutaj funkcja co 15 minut
@@ -164,6 +178,9 @@ void loop() {
   //delay(5);
   
   if(s_event){
+    if (strstr(input, "clear") != NULL) {
+      for (int i = 0; i < EEPROM.length(); i++) EEPROM.update(i, 0);
+    }
     //AT+SENDSMS=+48609105069;TYTUL;WIADOMOSC-hej-hej;;
     // if (strstr(input, "SENDSMS") != NULL) {
     //   s_event = false;
