@@ -114,6 +114,7 @@ void setup() {
 
     Serial.print("adr->"); Serial.print(startAddr); Serial.print(" E.w_c->"); Serial.print(MyData.write_counter); Serial.print(" E.val->"); Serial.println(MyData.value);
 
+    //gdy wszystkie komorki eeprom zuzyte to tak czy owak zacznij proces od poczatku
     if(startAddr>1000) {
       for (int i = 0; i < EEPROM.length(); i++) EEPROM.update(i, 0); 
       startAddr = 0;
@@ -125,7 +126,7 @@ void setup() {
   digitalWrite(4, LOW);
   delay(100);
   digitalWrite(4, HIGH);
-  //delay(15000);
+  delay(15000);
 
   attachInterrupt(digitalPinToInterrupt(2), isr, FALLING);
 
