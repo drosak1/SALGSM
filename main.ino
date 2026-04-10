@@ -58,7 +58,7 @@ volatile bool przerwanie = false;
 
 volatile uint16_t eprom_write_number = 60000;
 
-uint8_t startAddr = 0;
+uint16_t startAddr = 0;
 
 struct data {
   uint16_t write_counter;
@@ -69,7 +69,7 @@ data MyData;
 
 void isr() {
   unsigned long now = millis();
-  if (now - lastInterrupt > 100) {
+  if (now - lastInterrupt > 50) {
     licznik++;
     lastInterrupt = now;
     przerwanie = true;
@@ -113,6 +113,11 @@ void setup() {
 
 
     Serial.print("adr->"); Serial.print(startAddr); Serial.print(" E.w_c->"); Serial.print(MyData.write_counter); Serial.print(" E.val->"); Serial.println(MyData.value);
+
+    if(startAddr>1000) {
+      for (int i = 0; i < EEPROM.length(); i++) EEPROM.update(i, 0); 
+      startAddr = 0;
+    }
   }
 
   /////////////////////EEPROM  END/////////////////////////////////////////////////////

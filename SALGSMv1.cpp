@@ -15,12 +15,12 @@ bool SALGSMv1::init(void){
   //this->clear(response, sizeof(response));
   uint8_t pom=0;
   do{
-    delay(1000);
+    delay(1500);
     this->IMSI();
     Serial.print("IMSI: "); Serial.println(my_IMSI);
     pom++;
     if(pom>10) { Serial.println("RESET"); this->reset_(); }
-  }while(strlen(this->my_IMSI)<5);
+  }while(strlen(this->my_IMSI)<10);
 
   if(this->con_to_internet()==false) { Serial.println("RESET"); this->reset_(); }
   
