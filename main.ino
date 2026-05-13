@@ -24,7 +24,7 @@ void wdt_init(void) __attribute__((naked)) __attribute__((section(".init3")));
 #include <NeoSWSerial.h>
 NeoSWSerial GSM_serial(7, 8); //
 
-const unsigned long interval = 5UL * 60UL * 1000UL; // 15 minut w ms
+const unsigned long interval = 15UL * 60UL * 1000UL; // 15 minut w ms
 
 /* _____                                   _____
   |     |                                 |     |
