@@ -49,6 +49,36 @@ git config --global http.postBuffer 524288000
 ## Autor
 Dawid Rosak
 
+## ATmega4809 / MegaCoreX
+
+Kod na galezi `ATMEGA4809` jest przeznaczony dla ukladu U206 ze schematu
+`doc/Schemat_elektryczny.pdf` i pinoutu `48 pin standard` w MegaCoreX.
+
+Zalecane ustawienia Arduino IDE:
+
+- Board: `ATmega4809`
+- Pinout: `48 pin standard`
+- Clock: `Internal 16 MHz`
+- BOD: `2.9V`
+- EEPROM: `EEPROM retained`
+- Reset pin: `Reset`
+- Bootloader: `No bootloader`
+- Programowanie: programator zgodny z UPDI
+
+Polaczenia wykorzystywane przez program:
+
+| Funkcja | Peryferium/pin ATmega4809 | Oznaczenie na schemacie |
+| --- | --- | --- |
+| Konsola CH340 | USART1: PC0/PC1 | RXCH340/TX1ATMEGA, TXCH340/RX1ATMEGA |
+| SIM800L | USART3: PB0/PB1 | RXGSM/TX3ATMEGA, TXGSM/RX3ATMEGA |
+| Reset SIM800L | PB2 | RSTGSM |
+| Zasilanie SIM800L | PC3 | ENABLEGSM |
+| Licznik wody | PA3 | IMPWATER |
+| Licznik gazu (rezerwa) | PA4 | IMPGAS |
+
+Konsola i modem pracuja z predkoscia 9600 baud. Program korzysta ze
+sprzetowego USART3, dlatego biblioteka `NeoSWSerial` nie jest potrzebna.
+
 
 
 AT
