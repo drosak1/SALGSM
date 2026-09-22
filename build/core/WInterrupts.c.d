@@ -1,7 +1,9 @@
-c:\Users\d.rosak\OneDrive\ -\ ETO\ GRUPPE\ TECHNOLOGIES\ GmbH\Dokumenty\Arduino\programy\SALGSM\main\build\core\WInterrupts.c.o: \
- C:\Users\d.rosak\AppData\Local\Arduino15\packages\arduino\hardware\avr\1.8.7\cores\arduino\WInterrupts.c \
- C:\Users\d.rosak\AppData\Local\Arduino15\packages\arduino\hardware\avr\1.8.7\cores\arduino\wiring_private.h \
- C:\Users\d.rosak\AppData\Local\Arduino15\packages\arduino\hardware\avr\1.8.7\cores\arduino\Arduino.h \
- C:\Users\d.rosak\AppData\Local\Arduino15\packages\arduino\hardware\avr\1.8.7\cores\arduino\binary.h \
- C:\Users\d.rosak\AppData\Local\Arduino15\packages\arduino\hardware\avr\1.8.7\variants\eightanaloginputs/pins_arduino.h \
- c:\users\d.rosak\appdata\local\arduino15\packages\arduino\hardware\avr\1.8.7\variants\standard\pins_arduino.h
+C:\Users\d.rosak\OneDrive\ -\ ETO\ GRUPPE\ TECHNOLOGIES\ GmbH\Dokumenty\ChatGPT\SALGSM\build\core\WInterrupts.c.o: \
+ C:\Users\d.rosak\AppData\Local\Arduino15\packages\MegaCoreX\hardware\megaavr\1.2.0\cores\coreX-corefiles\WInterrupts.c \
+ C:\Users\d.rosak\AppData\Local\Arduino15\packages\MegaCoreX\hardware\megaavr\1.2.0\cores\coreX-corefiles\wiring_private.h \
+ C:\Users\d.rosak\AppData\Local\Arduino15\packages\MegaCoreX\hardware\megaavr\1.2.0\cores\coreX-corefiles\Arduino.h \
+ C:\Users\d.rosak\AppData\Local\Arduino15\packages\MegaCoreX\hardware\megaavr\1.2.0\cores\coreX-corefiles\api/ArduinoAPI.h \
+ C:\Users\d.rosak\AppData\Local\Arduino15\packages\MegaCoreX\hardware\megaavr\1.2.0\cores\coreX-corefiles\api/Binary.h \
+ C:\Users\d.rosak\AppData\Local\Arduino15\packages\MegaCoreX\hardware\megaavr\1.2.0\cores\coreX-corefiles\api/Common.h \
+ C:\Users\d.rosak\AppData\Local\Arduino15\packages\MegaCoreX\hardware\megaavr\1.2.0\variants\48pin-standard/pins_arduino.h \
+ C:\Users\d.rosak\AppData\Local\Arduino15\packages\MegaCoreX\hardware\megaavr\1.2.0\cores\coreX-corefiles/timers.h

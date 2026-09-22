@@ -1,5 +1,5 @@
 {
-  "configuration": "pinout=48pin_standard,clock=internal_16MHz,BOD=2v9,eeprom=keep,resetpin=reset,bootloader=no_bootloader",
+  "configuration": "clock=internal_16MHz,BOD=2v9,eeprom=keep,pinout=48pin_standard,resetpin=reset,bootloader=no_bootloader",
   "output": "build",
   "board": "MegaCoreX:megaavr:4809",
   "useProgrammer": true,
@@ -7,14 +7,14 @@
   "configurationRequired": true,
   "compile_profile": "",
   "monitorPortSettings": {
-    "settings": {
-      "port": "COM27",
-      "baudRate": 9600,
-      "lineEnding": "\r\n",
-      "dataBits": 8,
-      "parity": "none",
-      "stopBits": "one"
-    },
-    "profile_name": ""
-  }
+    "port": "COM27",
+    "baudRate": 9600,
+    "lineEnding": "\r\n",
+    "dataBits": 8,
+    "parity": "none",
+    "stopBits": "one"
+  },
+  "schemaVersion": 1,
+  "programmer": "jtag2updi",
+  "port": "COM27"
 }

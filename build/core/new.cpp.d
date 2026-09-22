@@ -1,4 +1,2 @@
-c:\Users\d.rosak\OneDrive\ -\ ETO\ GRUPPE\ TECHNOLOGIES\ GmbH\Dokumenty\Arduino\programy\SALGSM\main\build\core\new.cpp.o: \
- C:\Users\d.rosak\AppData\Local\Arduino15\packages\arduino\hardware\avr\1.8.7\cores\arduino\new.cpp \
- C:\Users\d.rosak\AppData\Local\Arduino15\packages\arduino\hardware\avr\1.8.7\cores\arduino\new.h \
- C:\Users\d.rosak\AppData\Local\Arduino15\packages\arduino\hardware\avr\1.8.7\cores\arduino\new
+C:\Users\d.rosak\OneDrive\ -\ ETO\ GRUPPE\ TECHNOLOGIES\ GmbH\Dokumenty\ChatGPT\SALGSM\build\core\new.cpp.o: \
+ C:\Users\d.rosak\AppData\Local\Arduino15\packages\MegaCoreX\hardware\megaavr\1.2.0\cores\coreX-corefiles\new.cpp
