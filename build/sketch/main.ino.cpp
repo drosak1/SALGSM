@@ -1,411 +1,290 @@
 #line 1 "C:\\Users\\d.rosak\\OneDrive - ETO GRUPPE TECHNOLOGIES GmbH\\Dokumenty\\Arduino\\programy\\SALGSM\\main\\main.ino"
-#include "Arduino.h"
-#include "SALGSMv1.h"
+#include <Arduino.h>
 #include <EEPROM.h>
-#include <SoftwareSerial.h>
-//#include <avr/wdt.h>
+#include <avr/wdt.h>
 
-SoftwareSerial GSM(2, 3);  // RX = D2, TX = D3
+#include "hardware_config.h"
+#include "SALGSMv1.h"
 
-#define EEPROM_SIZE 512  // Arduino Nano ma 1024 bajty EEPROM
-#define STRING_ADDR 0    // Adres początkowy dla stringa
+namespace {
+constexpr unsigned long SEND_INTERVAL_MS = 15UL * 60UL * 1000UL;
+constexpr unsigned long PULSE_DEBOUNCE_MS = 50UL;
+constexpr uint16_t EEPROM_WRITES_PER_SLOT = 60000U;
+constexpr char APN[] = "sensor.net";
+constexpr char API_KEY[] = "9999";
 
-SALGSMv1 GSM_dev("sensor.net", true); 
-char KEY[100] = "";
+struct __attribute__((packed)) CounterRecord {
+  uint16_t writeCounter;
+  uint32_t value;
+};
 
-char input[200];
+static_assert(sizeof(CounterRecord) == 6, "Niezgodny format rekordu EEPROM.");
 
-const char * readFromEEPROM(int addr);
+constexpr int EEPROM_RECORD_STRIDE = sizeof(CounterRecord) + 1;
 
-#line 19 "C:\\Users\\d.rosak\\OneDrive - ETO GRUPPE TECHNOLOGIES GmbH\\Dokumenty\\Arduino\\programy\\SALGSM\\main\\main.ino"
+SALGSMv1 gsm(GSM_SERIAL, DEBUG_SERIAL, APN, true);
+
+char input[201] = {0};
+size_t inputLength = 0;
+bool serialCommandReady = false;
+
+volatile uint32_t pulseCounter = 0;
+volatile unsigned long lastPulseMs = 0;
+volatile bool pulseEvent = false;
+
+CounterRecord counterRecord = {0, 0};
+int eepromAddress = 0;
+unsigned long previousSendMs = 0;
+
+bool eepromRecordFits(int address);
+void eraseCounterStorage();
+void loadCounter();
+void saveCounter();
+uint32_t counterSnapshot();
+void setCounter(uint32_t value);
+void readConsole();
+void processConsoleCommand();
+void pulseIsr();
+void resetGsmHardware();
+} // namespace
+
+// Watchdog uruchomiony przez reset systemu musi byc wylaczony przed setup().
+void disableWatchdogEarly(void) __attribute__((naked, section(".init3")));
+#line 56 "C:\\Users\\d.rosak\\OneDrive - ETO GRUPPE TECHNOLOGIES GmbH\\Dokumenty\\Arduino\\programy\\SALGSM\\main\\main.ino"
 void setup();
-#line 81 "C:\\Users\\d.rosak\\OneDrive - ETO GRUPPE TECHNOLOGIES GmbH\\Dokumenty\\Arduino\\programy\\SALGSM\\main\\main.ino"
+#line 88 "C:\\Users\\d.rosak\\OneDrive - ETO GRUPPE TECHNOLOGIES GmbH\\Dokumenty\\Arduino\\programy\\SALGSM\\main\\main.ino"
 void loop();
-#line 248 "C:\\Users\\d.rosak\\OneDrive - ETO GRUPPE TECHNOLOGIES GmbH\\Dokumenty\\Arduino\\programy\\SALGSM\\main\\main.ino"
-void serialEvent();
-#line 266 "C:\\Users\\d.rosak\\OneDrive - ETO GRUPPE TECHNOLOGIES GmbH\\Dokumenty\\Arduino\\programy\\SALGSM\\main\\main.ino"
-void writeToEEPROM(int addr, const char * data);
-#line 290 "C:\\Users\\d.rosak\\OneDrive - ETO GRUPPE TECHNOLOGIES GmbH\\Dokumenty\\Arduino\\programy\\SALGSM\\main\\main.ino"
-void clearEEPROM(int startAddr, int length);
-#line 296 "C:\\Users\\d.rosak\\OneDrive - ETO GRUPPE TECHNOLOGIES GmbH\\Dokumenty\\Arduino\\programy\\SALGSM\\main\\main.ino"
-bool parse_(const char* input, char* phone, char* text, char* title);
-#line 369 "C:\\Users\\d.rosak\\OneDrive - ETO GRUPPE TECHNOLOGIES GmbH\\Dokumenty\\Arduino\\programy\\SALGSM\\main\\main.ino"
-void http_get_(const char* cmd);
-#line 19 "C:\\Users\\d.rosak\\OneDrive - ETO GRUPPE TECHNOLOGIES GmbH\\Dokumenty\\Arduino\\programy\\SALGSM\\main\\main.ino"
-void setup() {
-  // Wyłącz watchdog na starcie (ważne przy restartach)
-  Serial.begin(9600);
-  Serial.setTimeout(1000);  
-  GSM.begin(9600);
-  delay(100);
-
-  // wdt_disable();
-  // delay(100);
-  // // Włącz watchdog – maksymalny czas: 8 sekund
-  //sei();                     // wymusza globalne przerwania
-  // wdt_enable(WDTO_8S);
-  // wdt_reset();
-
-  const char* str = readFromEEPROM(0);
-  memcpy(KEY, str, strlen(str)+1); // +1 dla '\0'
-
-  GSM_dev.set_serial(&GSM);
-
-  if (GSM_dev.debug()) Serial.println("\nSTART\n");
-
-  GSM_dev.STATUS = true;
-  Serial.println(GSM_dev.init());
-
-
-  Serial.println(GSM_dev.IMSI());
-
-  //GSM_dev.set_band("ALL_BAND");
-
-  GSM_dev.con_to_internet();
-
-
-  //GSM_dev.get_ip();
-  //GSM_dev.location_area_code();
-
+#line 52 "C:\\Users\\d.rosak\\OneDrive - ETO GRUPPE TECHNOLOGIES GmbH\\Dokumenty\\Arduino\\programy\\SALGSM\\main\\main.ino"
+void disableWatchdogEarly(void) {
+  wdt_disable();
 }
 
+void setup() {
+  wdt_disable();
+  const uint8_t resetFlags = RSTCTRL.RSTFR;
+  RSTCTRL.RSTFR = resetFlags; // zapis jedynki kasuje ustawione flagi resetu
 
-/*
-AT+CIMI
-901405180011350
+  digitalWrite(BoardPins::GSM_RESET, HIGH);
+  pinMode(BoardPins::GSM_RESET, OUTPUT);
 
+  digitalWrite(BoardPins::GSM_ENABLE, HIGH);
+  pinMode(BoardPins::GSM_ENABLE, OUTPUT);
 
-START ->
-AT
-AT+CGATT=1
-AT+CSTT="internet"
-AT+SAPBR=3,1,"CONTYPE","GPRS"
-AT+SAPBR=3,1,"APN","sensor.net"
-AT+SAPBR=1,1
-AT+SAPBR=2,1
+  pinMode(BoardPins::WATER_PULSE, INPUT_PULLUP);
+  pinMode(BoardPins::GAS_PULSE, INPUT_PULLUP);
 
-AT+HTTPINIT
-AT+HTTPPARA="CID",1
-AT+HTTPPARA="URL","http://dlb.com.pl/api/v1/telemetry.php?ID=901405180011350&KEY=9999&payload=xxyy"
-AT+HTTPPARA="URL","http://dlb.com.pl/api/v1/telemetry.php?ID=123456&KEY=9999&phone=48609105069&sms=GSMTEST"
-AT+HTTPACTION=0
-AT+HTTPREAD=0,33
-AT+HTTPREAD=33,66
-AT+HTTPTERM
-*/
+  DEBUG_SERIAL.begin(9600);
+  DEBUG_SERIAL.setTimeout(1000);
+  GSM_SERIAL.begin(9600);
+
+  DEBUG_SERIAL.println();
+  DEBUG_SERIAL.println("START ATmega4809 / MegaCoreX");
+  DEBUG_SERIAL.print("Reset flags: 0x");
+  DEBUG_SERIAL.println(resetFlags, HEX);
+
+  loadCounter();
+  resetGsmHardware();
+
+  attachInterrupt(BoardPins::WATER_PULSE, pulseIsr, FALLING);
+
+  gsm.init();
+  previousSendMs = millis();
+}
 
 void loop() {
-  char buf[100];                  // bufor docelowy
-  // nic
-  // if(GSM_dev.STATUS!="OK") {
-  //   Serial.println("RESET GSM");
-  //   GSM_dev.reset();
-  //   GSM_dev.con_to_internet();
-  // }
+  readConsole();
 
-  //Serial.println(GSM_dev.http_get_("http://dlb.com.pl/api.php?name=demo&device="+GSM_dev.IMSI()+"&command=TIME",2000));
+  const unsigned long currentMs = millis();
+  if (currentMs - previousSendMs >= SEND_INTERVAL_MS) {
+    previousSendMs = currentMs;
+    saveCounter();
 
-  //if (Serial1.available()) Serial.write(Serial1.read());
-  //if (Serial.available())  Serial1.write(Serial.read());
-  
+    DEBUG_SERIAL.print("Licznik -> ");
+    DEBUG_SERIAL.println(counterRecord.value);
 
+    char url[220];
+    const int length = snprintf(
+        url,
+        sizeof(url),
+        "AT+HTTPPARA=\"URL\",\"http://dlb.com.pl/api/tlm/v1/set.php?did=1&imsi=%s&key=%s&ip=%s&payload=%lu\"",
+        gsm.my_IMSI,
+        API_KEY,
+        gsm.IP,
+        static_cast<unsigned long>(counterRecord.value));
 
-
- // Sprawdzaj czy są dostępne dane do odczytu
- // if (Serial1.available() > 0) Serial.write(Serial1.read());
-
-  //if(strstr(buf,"AT+ID?")) GSM_dev.IMSI();
-  delay(1000);
-  Serial.println(input);
-  //wdt_reset();
-  // if(receivedString.indexOf("AT+ID?")>-1) Serial.println(GSM_dev.IMSI());
-  if (strstr(input, "AT+ID?") != NULL) {
-      Serial.println(GSM_dev.IMSI());
-      memset(input, 0, sizeof(input)); //czysci tablice
+    if (length < 0 || static_cast<size_t>(length) >= sizeof(url)) {
+      DEBUG_SERIAL.println("Blad: adres URL nie miesci sie w buforze.");
+    } else if (gsm.http_get_(url) || gsm.http_get_(url)) {
+      DEBUG_SERIAL.println("HTTP GET -> OK");
+    } else {
+      // Reset mikrokontrolera spowoduje ponowna inicjalizacje i reset SIM800L.
+      gsm.reset_();
+    }
   }
 
-  // if(receivedString.indexOf("AT+KEY?")>-1) 
-  if (strstr(input, "AT+KEY?") != NULL) {
-    Serial.println(readFromEEPROM(0));
-    memset(input, 0, sizeof(input)); //czysci tablice
+  if (pulseEvent) {
+    noInterrupts();
+    pulseEvent = false;
+    interrupts();
+    DEBUG_SERIAL.print('*');
   }
 
-  // if(receivedString.indexOf("AT+INIT=ON")>-1) Serial.println(GSM_dev.init());
+  processConsoleCommand();
+}
 
-  // //GSM_dev.set_band("ALL_BAND");
+namespace {
+void pulseIsr() {
+  const unsigned long now = millis();
+  if (now - lastPulseMs >= PULSE_DEBOUNCE_MS) {
+    ++pulseCounter;
+    lastPulseMs = now;
+    pulseEvent = true;
+  }
+}
 
-  // if(receivedString.indexOf("AT+INTERNET=ON")>-1) GSM_dev.con_to_internet();
+uint32_t counterSnapshot() {
+  noInterrupts();
+  const uint32_t value = pulseCounter;
+  interrupts();
+  return value;
+}
 
-  // if (receivedString.indexOf("AT+IP?")>-1) GSM_dev.get_ip();
+void setCounter(uint32_t value) {
+  noInterrupts();
+  pulseCounter = value;
+  interrupts();
+}
 
-  // if(receivedString.indexOf("AT+LOCATION?")>-1) GSM_dev.location_area_code();
+bool eepromRecordFits(int address) {
+  const int eepromLength = static_cast<int>(EEPROM.length());
+  return address >= 0 &&
+         address + static_cast<int>(sizeof(CounterRecord)) <= eepromLength;
+}
 
-  // if(receivedString.indexOf("AT+HTTPINIT?")>-1) GSM_dev.sendAT("AT+HTTPINIT",1000);
+void eraseCounterStorage() {
+  const int eepromLength = static_cast<int>(EEPROM.length());
+  for (int address = 0; address < eepromLength; ++address) {
+    EEPROM.update(address, 0);
+  }
+}
 
-  // if(receivedString.indexOf("AT+HTTPPARA?")>-1) GSM_dev.sendAT("AT+HTTPPARA=\"CID\",1",1000);
+void loadCounter() {
+  CounterRecord firstRecord;
+  EEPROM.get(0, firstRecord);
 
-  // if(receivedString.indexOf("AT+TIME?")>-1) {
-  //   char url[256];
-  //   String ID_="901405180011350";
-  //   String KEY_ ="9999";
-  //   String payload_ = "dupa";
-  //   snprintf(url, sizeof(url), "AT+HTTPPARA=\"URL\",\"http://dlb.com.pl/api/v1/telemetry.php?ID=%s&KEY=%s&payload=%s\"",ID_.c_str(), KEY_.c_str(), payload_.c_str());
-  //   GSM_dev.http_get_(url,1000);
-  // }
-
-  // if(receivedString.indexOf("AT+KEY=")>-1){
-  if (strstr(input, "AT+KEY=") != NULL) {
-    const char* pom_key = GSM_dev.extractID(input);
-    Serial.println(pom_key);
-    writeToEEPROM(0, pom_key);
-    memset(input, 0, sizeof(input)); //czysci tablice
+  if (firstRecord.writeCounter == UINT16_MAX && firstRecord.value == UINT32_MAX) {
+    eraseCounterStorage();
   }
 
-  // if(receivedString.indexOf("AT+SEND=")>-1){
-  //   String text = receivedString;
-  //   text.remove(0,text.indexOf("=")+1); // usuwa AT+...=
-  //   //if (GSM_dev.debug()) String.println(text);
-  //   //GSM_dev.http_get_("http://dlb.com.pl/api/v1/telemetry.php?ID="+GSM_dev.IMSI()+"&KEY="+KEY+"&command=TIME&payload="+text);
-  // }
+  bool validRecordFound = false;
+  uint32_t greatestValue = 0;
 
+  for (int address = 0; eepromRecordFits(address); address += EEPROM_RECORD_STRIDE) {
+    CounterRecord candidate;
+    EEPROM.get(address, candidate);
 
-  //if(receivedString.indexOf("AT+SENDSMS=+")>-1){
-  if (strstr(input, "AT+SENDSMS=+") != NULL) {
-    char phone[20];
-    char message[50];
-    char title[10];
-
-    if (parse_(input, phone, message, title)) {
-        Serial.println(phone);    // 48609105069
-        Serial.println(message);  // dupa
-    }else
-    {
-        Serial.println("Błąd: Nie znaleziono średników!");
-        return;
+    const bool emptyRecord = candidate.writeCounter == 0 && candidate.value == 0;
+    const bool validRecord = candidate.writeCounter > 0 &&
+                             candidate.writeCounter <= EEPROM_WRITES_PER_SLOT;
+    if (emptyRecord || !validRecord) {
+      break;
     }
 
-    char url[160];
-    char ID_[50] = "901405180011350";
-    char KEY_[10] = "9999";
-    snprintf(url, sizeof(url), "AT+HTTPPARA=\"URL\",\"http://dlb.com.pl/api/v1/telemetry.php?ID=%s&KEY=%s&phone=%s&sms=%s\"",ID_, KEY_, phone, message);
-    //int x=0;
-    // while(url[x] != NULL){
-    //   Serial.write(url[x]);
-    //   delay(1);
-    //   x++;
-    // }
-    // Serial.write("\n");
-
-    Serial.println("OK ;-) ");
-    delay(1000);
-    //Serial.println(url);
-    http_get_(url);
-    //GSM_dev.http_get_(url,1000);
-
-    memset(input, 0, sizeof(input)); //czysci tablice
-  }
-
-//https://debug.dlb.com.pl/api/v1/telemetry.php?ID=123456&KEY=9999&mail=dawid.rosak@gmail.com&mail_title=ALARM
-
-  //if(receivedString.indexOf("AT+SENDMAIL=")>-1){
-  if (strstr(input, "AT+SENDMAIL=") != NULL) {
-    char mail[40];
-    char message[50];
-    char title[50];
-
-    if (parse_(input, mail, title, message)) {
-        // Serial.println(phone);    // 48609105069
-        // Serial.println(message);  // dupa
-    }else
-    {
-        Serial.println("Błąd: Nie znaleziono średników!");
-        return;
+    validRecordFound = true;
+    eepromAddress = address;
+    counterRecord = candidate;
+    if (candidate.value > greatestValue) {
+      greatestValue = candidate.value;
     }
 
-    char url[160];
-    char ID_[50] = "901405180011350";
-    char KEY_[10] = "9999";
-    snprintf(url, sizeof(url), "AT+HTTPPARA=\"URL\",\"http://dlb.com.pl/api/v1/telemetry.php?ID=%s&KEY=%s&mail=%s&mail_title=%s&message=%s\"",ID_, KEY_, mail, title,message);
-    int x=0;
-    // while(url[x] != NULL){
-    //   Serial.write(url[x]);
-    //   delay(1);
-    //   x++;
-    // }
-    // Serial.write("\n");
+    DEBUG_SERIAL.print("EEPROM adr=");
+    DEBUG_SERIAL.print(address);
+    DEBUG_SERIAL.print(" zapisow=");
+    DEBUG_SERIAL.print(candidate.writeCounter);
+    DEBUG_SERIAL.print(" wartosc=");
+    DEBUG_SERIAL.println(candidate.value);
 
-    Serial.println("OK ;-) ");
-    delay(1000);
-    //Serial.println(url);
-    http_get_(url);
-    //GSM_dev.http_get_(url,1000);
-
-    memset(input, 0, sizeof(input)); //czysci tablice
-  }
-
-  if (strstr(input, "AT+DEBUG") != NULL) {
-      GSM_dev.setDEBUG(true);
-      memset(input, 0, sizeof(input)); //czysci tablice
-  }
-  
-  //if(receivedString.indexOf("AT+DIAG?")>-1) 
-  if (strstr(input, "AT+DIAG?") != NULL) { 
-    GSM_dev.networkDiagnosis(); 
-    memset(input, 0, sizeof(input)); //czysci tablice
-  }
-
-  //if (Serial1.available()) Serial1.write(Serial1.read());
-  //if (Serial.available()) Serial1.write(Serial.read());
-}
-
-
-
-
-void serialEvent() {
-    int pom=0;
-    while (Serial.available()) {
-        char c = Serial.read();
-        input[pom] = c;
-        pom++;
-        //Serial.print(c);
-        // obsłuż odebrany znak
+    if (candidate.writeCounter < EEPROM_WRITES_PER_SLOT) {
+      break;
     }
-}
-
-
-
-
-
-
-
-// Funkcja zapisująca string do EEPROM
-void writeToEEPROM(int addr, const char * data) {
-  int pos = addr;
-  
-  for (int i = 0; i < strlen(data); i++) {
-    EEPROM.update(pos++, data[i]);
   }
 
-  EEPROM.update(pos, '\0');  // znak końca
-}
-
-// Funkcja odczytująca string z EEPROM
-const char * readFromEEPROM(int addr) {
-  char out[100] = "";
-  int pos = addr;
-  char c;
-  uint8_t step=0;
-  while (((c = EEPROM.read(pos++)) != '\0') and (step<100)) {
-    out[step] = c;
-    step ++;
+  if (!validRecordFound) {
+    eepromAddress = 0;
+    counterRecord = {0, 0};
+  } else {
+    counterRecord.value = greatestValue;
   }
-  return out;
+
+  setCounter(counterRecord.value);
+  DEBUG_SERIAL.print("Licznik z EEPROM: ");
+  DEBUG_SERIAL.println(counterRecord.value);
 }
 
-// Funkcja czyszcząca EEPROM
-void clearEEPROM(int startAddr, int length) {
-  for (int i = startAddr; i < startAddr + length && i < EEPROM_SIZE; i++) {
-    EEPROM.write(i, 0xFF); // Lub 0 - zależy od preferencji
+void saveCounter() {
+  if (counterRecord.writeCounter >= EEPROM_WRITES_PER_SLOT) {
+    const int nextAddress = eepromAddress + EEPROM_RECORD_STRIDE;
+    if (eepromRecordFits(nextAddress)) {
+      eepromAddress = nextAddress;
+    } else {
+      eraseCounterStorage();
+      eepromAddress = 0;
+    }
+    counterRecord.writeCounter = 0;
+  }
+
+  counterRecord.value = counterSnapshot();
+  ++counterRecord.writeCounter;
+  EEPROM.put(eepromAddress, counterRecord);
+}
+
+void resetGsmHardware() {
+  // SIM800L RST jest aktywny w stanie niskim.
+  digitalWrite(BoardPins::GSM_RESET, LOW);
+  delay(150);
+  digitalWrite(BoardPins::GSM_RESET, HIGH);
+  delay(15000);
+}
+
+void readConsole() {
+  while (DEBUG_SERIAL.available()) {
+    const char c = static_cast<char>(DEBUG_SERIAL.read());
+
+    if (c == '\r') {
+      continue;
+    }
+    if (c == '\n') {
+      input[inputLength] = '\0';
+      serialCommandReady = inputLength > 0;
+      inputLength = 0;
+      continue;
+    }
+
+    if (inputLength < sizeof(input) - 1) {
+      input[inputLength++] = c;
+      input[inputLength] = '\0';
+    } else {
+      inputLength = 0;
+      input[0] = '\0';
+    }
   }
 }
 
-bool parse_(const char* input, char* phone, char* text, char* title) {
-    // 1. Znajdź znak '='
-    const char* eq = strchr(input, '=');
-    if (!eq) return false;
-    eq++;  // przejdź za '='
+void processConsoleCommand() {
+  if (!serialCommandReady) {
+    return;
+  }
+  serialCommandReady = false;
 
-    // 2. Pomijamy '+' jeśli jest
-    if (*eq == '+') eq++;
+  if (strstr(input, "clear") != nullptr) {
+    const uint32_t currentValue = counterSnapshot();
+    eraseCounterStorage();
+    eepromAddress = 0;
+    counterRecord = {0, currentValue};
+    DEBUG_SERIAL.println("EEPROM wyczyszczony.");
+  }
 
-    const char* start = eq;
-    const char* sep;
-
-    // 3. Numer telefonu – od '=' lub '+' do pierwszego ';'
-    sep = strchr(start, ';');
-    if (!sep) return false;
-    int len = sep - start;
-    strncpy(phone, start, len);
-    phone[len] = '\0';
-
-    // 4. Tekst – od pierwszego ';' do drugiego ';'
-    start = sep + 1;
-    sep = strchr(start, ';');
-    if (!sep) return false;
-    len = sep - start;
-    strncpy(text, start, len);
-    text[len] = '\0';
-
-    // 5. Trzecia zmienna – od drugiego ';' do trzeciego ';'
-    start = sep + 1;
-    sep = strchr(start, ';');
-    if (!sep) return false;
-    len = sep - start;
-    strncpy(title, start, len);
-    title[len] = '\0';
-
-    return true;
+  memset(input, 0, sizeof(input));
 }
-
-
-// bool parse_(const char* input, char* phone, char* text) {
-
-//     // 1. Znajdź znak '='
-//     const char* eq = strchr(input, '=');
-//     if (!eq) return false;
-//     eq++;  // przejdź za '='
-
-//     // 2. Pierwszy znak telefonu to '+' — pomijamy
-//     if (*eq == '+') eq++;
-
-//     // 3. Kopiuj numer do ';'
-//     const char* semicolon = strchr(eq, ';');
-//     if (!semicolon) return false;
-
-//     int phoneLen = semicolon - eq;
-//     strncpy(phone, eq, phoneLen);
-//     phone[phoneLen] = '\0';
-
-//     // 4. Dalej jest tekst: "dupa"
-//     const char* txtStart = semicolon + 1;
-//     const char* txtEnd = strchr(txtStart, ';');
-//     if (!txtEnd) return false;
-
-//     int textLen = txtEnd - txtStart;
-//     strncpy(text, txtStart, textLen);
-//     text[textLen] = '\0';
-
-//     return true;
-// }
-
-
-
-
-
-void http_get_(const char* cmd){
-  //url += "&lacDec="+String(this->lacDec)+"&cellDec="+String(this->cellDec)+"&netop="+this->network_operator;
-
-  GSM.println("AT+HTTPINIT");
-
-  delay(2000);
-
-  GSM.println("AT+HTTPPARA=\"CID\",1");
-
-  delay(2000);
-
-  GSM.println(cmd);
-
-  delay(2000);
-
-  GSM.println("AT+HTTPACTION=0");
-
-  delay(4000);
-  
-  GSM.println("AT+HTTPREAD=0,100");
-    
-  delay(2000);
-
-  GSM.println("AT+HTTPTERM");
-  
-}
+} // namespace
 
