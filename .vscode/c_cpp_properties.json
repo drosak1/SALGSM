@@ -4,7 +4,11 @@
       "name": "Arduino",
       "includePath": [
         "C:\\Users\\d.rosak\\Documents\\Arduino\\libraries/**",
+<<<<<<< HEAD
         "C:\\Users\\d.rosak\\OneDrive - ETO GRUPPE TECHNOLOGIES GmbH\\Dokumenty\\Arduino\\programy\\SALGSM\\main/**",
+=======
+        "C:\\Users\\d.rosak\\OneDrive - ETO GRUPPE TECHNOLOGIES GmbH\\Dokumenty\\ChatGPT\\SALGSM/**",
+>>>>>>> fb3245bdbaebedea987dd6b39e3edac721d1a78e
         "C:\\Users\\d.rosak\\AppData\\Local\\Arduino15\\packages\\MegaCoreX\\hardware\\megaavr\\1.2.0\\cores\\coreX-corefiles\\api\\deprecated/**",
         "C:\\Users\\d.rosak\\AppData\\Local\\Arduino15\\packages\\MegaCoreX\\hardware\\megaavr\\1.2.0\\cores\\coreX-corefiles/**",
         "C:\\Users\\d.rosak\\AppData\\Local\\Arduino15\\packages\\MegaCoreX\\hardware\\megaavr\\1.2.0\\variants\\48pin-standard/**",
@@ -39,9 +43,15 @@
         "-IC:\\Users\\d.rosak\\AppData\\Local\\Arduino15\\packages\\MegaCoreX\\hardware\\megaavr\\1.2.0\\cores\\coreX-corefiles",
         "-IC:\\Users\\d.rosak\\AppData\\Local\\Arduino15\\packages\\MegaCoreX\\hardware\\megaavr\\1.2.0\\variants\\48pin-standard",
         "-IC:\\Users\\d.rosak\\AppData\\Local\\Arduino15\\packages\\MegaCoreX\\hardware\\megaavr\\1.2.0\\libraries\\EEPROM\\src",
+<<<<<<< HEAD
         "C:\\Users\\d.rosak\\OneDrive - ETO GRUPPE TECHNOLOGIES GmbH\\Dokumenty\\Arduino\\programy\\SALGSM\\main\\build\\sketch\\main.ino.cpp",
         "-o",
         "C:\\Users\\d.rosak\\OneDrive - ETO GRUPPE TECHNOLOGIES GmbH\\Dokumenty\\Arduino\\programy\\SALGSM\\main\\build\\sketch\\main.ino.cpp.o"
+=======
+        "C:\\Users\\d.rosak\\OneDrive - ETO GRUPPE TECHNOLOGIES GmbH\\Dokumenty\\ChatGPT\\SALGSM\\build\\sketch\\SALGSM.ino.cpp",
+        "-o",
+        "C:\\Users\\d.rosak\\OneDrive - ETO GRUPPE TECHNOLOGIES GmbH\\Dokumenty\\ChatGPT\\SALGSM\\build\\sketch\\SALGSM.ino.cpp.o"
+>>>>>>> fb3245bdbaebedea987dd6b39e3edac721d1a78e
       ],
       "defines": [
         "NDEBUG",

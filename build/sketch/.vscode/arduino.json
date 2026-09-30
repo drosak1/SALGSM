@@ -1,4 +1,4 @@
-#line 1 "C:\\Users\\d.rosak\\OneDrive - ETO GRUPPE TECHNOLOGIES GmbH\\Dokumenty\\Arduino\\programy\\SALGSM\\main\\.vscode\\arduino.json"
+#line 1 "C:\\Users\\d.rosak\\OneDrive - ETO GRUPPE TECHNOLOGIES GmbH\\Dokumenty\\ChatGPT\\SALGSM\\.vscode\\arduino.json"
 {
   "configuration": "clock=internal_16MHz,BOD=2v9,eeprom=keep,pinout=48pin_standard,resetpin=reset,bootloader=no_bootloader",
   "output": "build",
@@ -8,6 +8,7 @@
   "configurationRequired": true,
   "compile_profile": "",
   "monitorPortSettings": {
+<<<<<<< HEAD
     "settings": {
       "port": "COM27",
       "baudRate": 115200,
@@ -19,5 +20,16 @@
     "profile_name": ""
   },
   "programmer": "atmel_powerdebugger_updi",
+=======
+    "port": "COM27",
+    "baudRate": 9600,
+    "lineEnding": "\r\n",
+    "dataBits": 8,
+    "parity": "none",
+    "stopBits": "one"
+  },
+  "schemaVersion": 1,
+  "programmer": "jtag2updi",
+>>>>>>> fb3245bdbaebedea987dd6b39e3edac721d1a78e
   "port": "COM27"
 }

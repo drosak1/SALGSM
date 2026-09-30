@@ -1,4 +1,4 @@
-#line 1 "C:\\Users\\d.rosak\\OneDrive - ETO GRUPPE TECHNOLOGIES GmbH\\Dokumenty\\Arduino\\programy\\SALGSM\\main\\README.md"
+#line 1 "C:\\Users\\d.rosak\\OneDrive - ETO GRUPPE TECHNOLOGIES GmbH\\Dokumenty\\ChatGPT\\SALGSM\\README.md"
 ## Repozytorium Gitea
 
 <p align="center">

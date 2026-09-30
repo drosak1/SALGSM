@@ -1,4 +1,4 @@
-#line 1 "C:\\Users\\d.rosak\\OneDrive - ETO GRUPPE TECHNOLOGIES GmbH\\Dokumenty\\Arduino\\programy\\SALGSM\\main\\SALGSMv1.cpp"
+#line 1 "C:\\Users\\d.rosak\\OneDrive - ETO GRUPPE TECHNOLOGIES GmbH\\Dokumenty\\ChatGPT\\SALGSM\\SALGSMv1.cpp"
 #include "SALGSMv1.h"
 
 #include <avr/wdt.h>

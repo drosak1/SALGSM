@@ -7,8 +7,13 @@
   },
   {
     "compile": {
+<<<<<<< HEAD
       "source_path": "C:\\Users\\d.rosak\\OneDrive - ETO GRUPPE TECHNOLOGIES GmbH\\Dokumenty\\Arduino\\programy\\SALGSM\\main\\build\\sketch\\main.ino.cpp.merged",
       "depfile_path": "C:\\Users\\d.rosak\\OneDrive - ETO GRUPPE TECHNOLOGIES GmbH\\Dokumenty\\Arduino\\programy\\SALGSM\\main\\build\\sketch\\main.ino.cpp.merged.libsdetect.d"
+=======
+      "source_path": "C:\\Users\\d.rosak\\OneDrive - ETO GRUPPE TECHNOLOGIES GmbH\\Dokumenty\\ChatGPT\\SALGSM\\build\\sketch\\SALGSM.ino.cpp.merged",
+      "depfile_path": "C:\\Users\\d.rosak\\OneDrive - ETO GRUPPE TECHNOLOGIES GmbH\\Dokumenty\\ChatGPT\\SALGSM\\build\\sketch\\SALGSM.ino.cpp.merged.libsdetect.d"
+>>>>>>> fb3245bdbaebedea987dd6b39e3edac721d1a78e
     },
     "compile_task": {
       "args": [
@@ -39,12 +44,20 @@
         "-IC:\\Users\\d.rosak\\AppData\\Local\\Arduino15\\packages\\MegaCoreX\\hardware\\megaavr\\1.2.0\\cores\\coreX-corefiles/api/deprecated",
         "-IC:\\Users\\d.rosak\\AppData\\Local\\Arduino15\\packages\\MegaCoreX\\hardware\\megaavr\\1.2.0\\cores\\coreX-corefiles",
         "-IC:\\Users\\d.rosak\\AppData\\Local\\Arduino15\\packages\\MegaCoreX\\hardware\\megaavr\\1.2.0\\variants\\48pin-standard",
+<<<<<<< HEAD
         "C:\\Users\\d.rosak\\OneDrive - ETO GRUPPE TECHNOLOGIES GmbH\\Dokumenty\\Arduino\\programy\\SALGSM\\main\\build\\sketch\\main.ino.cpp.merged",
+=======
+        "C:\\Users\\d.rosak\\OneDrive - ETO GRUPPE TECHNOLOGIES GmbH\\Dokumenty\\ChatGPT\\SALGSM\\build\\sketch\\SALGSM.ino.cpp.merged",
+>>>>>>> fb3245bdbaebedea987dd6b39e3edac721d1a78e
         "-o",
         "nul",
         "-MMD",
         "-MF",
+<<<<<<< HEAD
         "C:\\Users\\d.rosak\\OneDrive - ETO GRUPPE TECHNOLOGIES GmbH\\Dokumenty\\Arduino\\programy\\SALGSM\\main\\build\\sketch\\main.ino.cpp.merged.libsdetect.d"
+=======
+        "C:\\Users\\d.rosak\\OneDrive - ETO GRUPPE TECHNOLOGIES GmbH\\Dokumenty\\ChatGPT\\SALGSM\\build\\sketch\\SALGSM.ino.cpp.merged.libsdetect.d"
+>>>>>>> fb3245bdbaebedea987dd6b39e3edac721d1a78e
       ]
     }
   },
@@ -56,8 +69,13 @@
   },
   {
     "compile": {
+<<<<<<< HEAD
       "source_path": "C:\\Users\\d.rosak\\OneDrive - ETO GRUPPE TECHNOLOGIES GmbH\\Dokumenty\\Arduino\\programy\\SALGSM\\main\\build\\sketch\\main.ino.cpp.merged",
       "depfile_path": "C:\\Users\\d.rosak\\OneDrive - ETO GRUPPE TECHNOLOGIES GmbH\\Dokumenty\\Arduino\\programy\\SALGSM\\main\\build\\sketch\\main.ino.cpp.merged.libsdetect.d"
+=======
+      "source_path": "C:\\Users\\d.rosak\\OneDrive - ETO GRUPPE TECHNOLOGIES GmbH\\Dokumenty\\ChatGPT\\SALGSM\\build\\sketch\\SALGSM.ino.cpp.merged",
+      "depfile_path": "C:\\Users\\d.rosak\\OneDrive - ETO GRUPPE TECHNOLOGIES GmbH\\Dokumenty\\ChatGPT\\SALGSM\\build\\sketch\\SALGSM.ino.cpp.merged.libsdetect.d"
+>>>>>>> fb3245bdbaebedea987dd6b39e3edac721d1a78e
     },
     "compile_task": {
       "args": [
@@ -89,12 +107,20 @@
         "-IC:\\Users\\d.rosak\\AppData\\Local\\Arduino15\\packages\\MegaCoreX\\hardware\\megaavr\\1.2.0\\cores\\coreX-corefiles",
         "-IC:\\Users\\d.rosak\\AppData\\Local\\Arduino15\\packages\\MegaCoreX\\hardware\\megaavr\\1.2.0\\variants\\48pin-standard",
         "-IC:\\Users\\d.rosak\\AppData\\Local\\Arduino15\\packages\\MegaCoreX\\hardware\\megaavr\\1.2.0\\libraries\\EEPROM\\src",
+<<<<<<< HEAD
         "C:\\Users\\d.rosak\\OneDrive - ETO GRUPPE TECHNOLOGIES GmbH\\Dokumenty\\Arduino\\programy\\SALGSM\\main\\build\\sketch\\main.ino.cpp.merged",
+=======
+        "C:\\Users\\d.rosak\\OneDrive - ETO GRUPPE TECHNOLOGIES GmbH\\Dokumenty\\ChatGPT\\SALGSM\\build\\sketch\\SALGSM.ino.cpp.merged",
+>>>>>>> fb3245bdbaebedea987dd6b39e3edac721d1a78e
         "-o",
         "nul",
         "-MMD",
         "-MF",
+<<<<<<< HEAD
         "C:\\Users\\d.rosak\\OneDrive - ETO GRUPPE TECHNOLOGIES GmbH\\Dokumenty\\Arduino\\programy\\SALGSM\\main\\build\\sketch\\main.ino.cpp.merged.libsdetect.d"
+=======
+        "C:\\Users\\d.rosak\\OneDrive - ETO GRUPPE TECHNOLOGIES GmbH\\Dokumenty\\ChatGPT\\SALGSM\\build\\sketch\\SALGSM.ino.cpp.merged.libsdetect.d"
+>>>>>>> fb3245bdbaebedea987dd6b39e3edac721d1a78e
       ]
     }
   },
@@ -103,8 +129,13 @@
   },
   {
     "compile": {
+<<<<<<< HEAD
       "source_path": "C:\\Users\\d.rosak\\OneDrive - ETO GRUPPE TECHNOLOGIES GmbH\\Dokumenty\\Arduino\\programy\\SALGSM\\main\\build\\sketch\\SALGSMv1.cpp",
       "depfile_path": "C:\\Users\\d.rosak\\OneDrive - ETO GRUPPE TECHNOLOGIES GmbH\\Dokumenty\\Arduino\\programy\\SALGSM\\main\\build\\sketch\\SALGSMv1.cpp.libsdetect.d"
+=======
+      "source_path": "C:\\Users\\d.rosak\\OneDrive - ETO GRUPPE TECHNOLOGIES GmbH\\Dokumenty\\ChatGPT\\SALGSM\\build\\sketch\\SALGSMv1.cpp",
+      "depfile_path": "C:\\Users\\d.rosak\\OneDrive - ETO GRUPPE TECHNOLOGIES GmbH\\Dokumenty\\ChatGPT\\SALGSM\\build\\sketch\\SALGSMv1.cpp.libsdetect.d"
+>>>>>>> fb3245bdbaebedea987dd6b39e3edac721d1a78e
     },
     "compile_task": {
       "args": [
@@ -136,12 +167,20 @@
         "-IC:\\Users\\d.rosak\\AppData\\Local\\Arduino15\\packages\\MegaCoreX\\hardware\\megaavr\\1.2.0\\cores\\coreX-corefiles",
         "-IC:\\Users\\d.rosak\\AppData\\Local\\Arduino15\\packages\\MegaCoreX\\hardware\\megaavr\\1.2.0\\variants\\48pin-standard",
         "-IC:\\Users\\d.rosak\\AppData\\Local\\Arduino15\\packages\\MegaCoreX\\hardware\\megaavr\\1.2.0\\libraries\\EEPROM\\src",
+<<<<<<< HEAD
         "C:\\Users\\d.rosak\\OneDrive - ETO GRUPPE TECHNOLOGIES GmbH\\Dokumenty\\Arduino\\programy\\SALGSM\\main\\build\\sketch\\SALGSMv1.cpp",
+=======
+        "C:\\Users\\d.rosak\\OneDrive - ETO GRUPPE TECHNOLOGIES GmbH\\Dokumenty\\ChatGPT\\SALGSM\\build\\sketch\\SALGSMv1.cpp",
+>>>>>>> fb3245bdbaebedea987dd6b39e3edac721d1a78e
         "-o",
         "nul",
         "-MMD",
         "-MF",
+<<<<<<< HEAD
         "C:\\Users\\d.rosak\\OneDrive - ETO GRUPPE TECHNOLOGIES GmbH\\Dokumenty\\Arduino\\programy\\SALGSM\\main\\build\\sketch\\SALGSMv1.cpp.libsdetect.d"
+=======
+        "C:\\Users\\d.rosak\\OneDrive - ETO GRUPPE TECHNOLOGIES GmbH\\Dokumenty\\ChatGPT\\SALGSM\\build\\sketch\\SALGSMv1.cpp.libsdetect.d"
+>>>>>>> fb3245bdbaebedea987dd6b39e3edac721d1a78e
       ]
     }
   },

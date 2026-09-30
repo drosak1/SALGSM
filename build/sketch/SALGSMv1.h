@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 #line 1 "C:\\Users\\d.rosak\\OneDrive - ETO GRUPPE TECHNOLOGIES GmbH\\Dokumenty\\Arduino\\programy\\SALGSM\\main\\SALGSMv1.h"
+=======
+#line 1 "C:\\Users\\d.rosak\\OneDrive - ETO GRUPPE TECHNOLOGIES GmbH\\Dokumenty\\ChatGPT\\SALGSM\\SALGSMv1.h"
+>>>>>>> fb3245bdbaebedea987dd6b39e3edac721d1a78e
 #ifndef SALGSMV1_H
 #define SALGSMV1_H
 

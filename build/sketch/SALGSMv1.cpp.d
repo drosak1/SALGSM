@@ -1,6 +1,12 @@
+<<<<<<< HEAD
 C:\Users\d.rosak\OneDrive\ -\ ETO\ GRUPPE\ TECHNOLOGIES\ GmbH\Dokumenty\Arduino\programy\SALGSM\main\build\sketch\SALGSMv1.cpp.o: \
  C:\Users\d.rosak\OneDrive\ -\ ETO\ GRUPPE\ TECHNOLOGIES\ GmbH\Dokumenty\Arduino\programy\SALGSM\main\build\sketch\SALGSMv1.cpp \
  C:\Users\d.rosak\OneDrive\ -\ ETO\ GRUPPE\ TECHNOLOGIES\ GmbH\Dokumenty\Arduino\programy\SALGSM\main\build\sketch\SALGSMv1.h \
+=======
+C:\Users\d.rosak\OneDrive\ -\ ETO\ GRUPPE\ TECHNOLOGIES\ GmbH\Dokumenty\ChatGPT\SALGSM\build\sketch\SALGSMv1.cpp.o: \
+ C:\Users\d.rosak\OneDrive\ -\ ETO\ GRUPPE\ TECHNOLOGIES\ GmbH\Dokumenty\ChatGPT\SALGSM\build\sketch\SALGSMv1.cpp \
+ C:\Users\d.rosak\OneDrive\ -\ ETO\ GRUPPE\ TECHNOLOGIES\ GmbH\Dokumenty\ChatGPT\SALGSM\build\sketch\SALGSMv1.h \
+>>>>>>> fb3245bdbaebedea987dd6b39e3edac721d1a78e
  C:\Users\d.rosak\AppData\Local\Arduino15\packages\MegaCoreX\hardware\megaavr\1.2.0\cores\coreX-corefiles/Arduino.h \
  C:\Users\d.rosak\AppData\Local\Arduino15\packages\MegaCoreX\hardware\megaavr\1.2.0\cores\coreX-corefiles/api/ArduinoAPI.h \
  C:\Users\d.rosak\AppData\Local\Arduino15\packages\MegaCoreX\hardware\megaavr\1.2.0\cores\coreX-corefiles/api/Binary.h \
