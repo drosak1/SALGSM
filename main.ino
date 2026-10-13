@@ -58,11 +58,11 @@ void setup() {
   const uint8_t resetFlags = RSTCTRL.RSTFR;
   RSTCTRL.RSTFR = resetFlags; // zapis jedynki kasuje ustawione flagi resetu
 
-  digitalWrite(BoardPins::GSM_RESET, HIGH);
   pinMode(BoardPins::GSM_RESET, OUTPUT);
+  digitalWrite(BoardPins::GSM_RESET, HIGH);
 
-  digitalWrite(BoardPins::GSM_ENABLE, HIGH);
   pinMode(BoardPins::GSM_ENABLE, OUTPUT);
+  digitalWrite(BoardPins::GSM_ENABLE, HIGH);
 
   pinMode(BoardPins::WATER_PULSE, INPUT_PULLUP);
   pinMode(BoardPins::GAS_PULSE, INPUT_PULLUP);
