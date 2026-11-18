@@ -5,6 +5,7 @@
 #include "SALGSMv1.h"
 
 namespace {
+                                            //min  sek    milis
   constexpr unsigned long SEND_INTERVAL_MS = 15UL * 60UL * 1000UL;
   constexpr unsigned long PULSE_DEBOUNCE_MS = 50UL;
   constexpr uint16_t EEPROM_WRITES_PER_SLOT = 60000U;
@@ -105,6 +106,7 @@ void loop() {
     saveCounter();
     DEBUG_SERIAL.print("Licznik -> ");
     DEBUG_SERIAL.println(counterRecord.value);
+    gsm.send("licznik", counterRecord.value);
   }
 
   if (pulseEvent) {
