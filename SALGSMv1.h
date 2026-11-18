@@ -28,7 +28,7 @@ public:
   void setDEBUG(bool state);
 
   char my_IMSI[20]        = {0};
-  char my_APN[100]        = {0};
+  char my_APN[20]        = {0};
   char my_APIKEY[10]      = {0};
   char my_SERVERURL[20]   = {0};
   char IP[20]             = {0};
