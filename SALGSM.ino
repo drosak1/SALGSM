@@ -9,8 +9,6 @@ namespace {
 constexpr unsigned long SEND_INTERVAL_MS = 15UL * 60UL * 1000UL;
 constexpr unsigned long PULSE_DEBOUNCE_MS = 50UL;
 constexpr uint16_t EEPROM_WRITES_PER_SLOT = 60000U;
-constexpr char APN[] = "sensor.net";
-constexpr char API_KEY[] = "9999";
 
 struct __attribute__((packed)) CounterRecord {
   uint16_t writeCounter;
@@ -21,7 +19,13 @@ static_assert(sizeof(CounterRecord) == 6, "Niezgodny format rekordu EEPROM.");
 
 constexpr int EEPROM_RECORD_STRIDE = sizeof(CounterRecord) + 1;
 
-SALGSMv1 gsm(GSM_SERIAL, DEBUG_SERIAL, APN, true);
+//GSM==========================================================================================================================
+constexpr char APN[] = "sensor.net";
+constexpr char API_KEY[] = "9999";
+constexpr char SERVER_URL[] = "dlb.com.pl";
+SALGSMv1 gsm(GSM_SERIAL, DEBUG_SERIAL, APN, API_KEY, SERVER_URL, true, PIN_PC3, PIN_PB2);
+//=============================================================================================================================
+
 
 char input[201] = {0};
 size_t inputLength = 0;
@@ -58,14 +62,17 @@ void setup() {
   const uint8_t resetFlags = RSTCTRL.RSTFR;
   RSTCTRL.RSTFR = resetFlags; // zapis jedynki kasuje ustawione flagi resetu
 
-  digitalWrite(BoardPins::GSM_RESET, HIGH);
-  pinMode(BoardPins::GSM_RESET, OUTPUT);
-
-  digitalWrite(BoardPins::GSM_ENABLE, HIGH);
-  pinMode(BoardPins::GSM_ENABLE, OUTPUT);
+  
+  // pinMode(BoardPins::GSM_RESET, OUTPUT);
+  // pinMode(BoardPins::GSM_ENABLE, OUTPUT);
+  pinMode(BoardPins::LED_1, OUTPUT);
 
   pinMode(BoardPins::WATER_PULSE, INPUT_PULLUP);
   pinMode(BoardPins::GAS_PULSE, INPUT_PULLUP);
+
+  // digitalWrite(BoardPins::GSM_ENABLE, HIGH);  
+  // digitalWrite(BoardPins::GSM_RESET, HIGH);
+  digitalWrite(BoardPins::LED_1, HIGH);
 
   DEBUG_SERIAL.begin(9600);
   DEBUG_SERIAL.setTimeout(1000);
@@ -77,11 +84,10 @@ void setup() {
   DEBUG_SERIAL.println(resetFlags, HEX);
 
   loadCounter();
-  resetGsmHardware();
 
   attachInterrupt(BoardPins::WATER_PULSE, pulseIsr, FALLING);
 
-  gsm.init();
+  gsm.switch_on();
   previousSendMs = millis();
 }
 
@@ -97,14 +103,12 @@ void loop() {
     DEBUG_SERIAL.println(counterRecord.value);
 
     char url[220];
-    const int length = snprintf(
-        url,
-        sizeof(url),
-        "AT+HTTPPARA=\"URL\",\"http://dlb.com.pl/api/tlm/v1/set.php?did=1&imsi=%s&key=%s&ip=%s&payload=%lu\"",
-        gsm.my_IMSI,
-        API_KEY,
-        gsm.IP,
-        static_cast<unsigned long>(counterRecord.value));
+    const int length = snprintf(url,sizeof(url),
+                                "AT+HTTPPARA=\"URL\",\"http://dlb.com.pl/api/tlm/v1/set.php?did=1&imsi=%s&key=%s&ip=%s&payload=%lu\"",
+                                gsm.my_IMSI,
+                                API_KEY,
+                                gsm.IP,
+                                static_cast<unsigned long>(counterRecord.value));
 
     if (length < 0 || static_cast<size_t>(length) >= sizeof(url)) {
       DEBUG_SERIAL.println("Blad: adres URL nie miesci sie w buforze.");
@@ -112,7 +116,7 @@ void loop() {
       DEBUG_SERIAL.println("HTTP GET -> OK");
     } else {
       // Reset mikrokontrolera spowoduje ponowna inicjalizacje i reset SIM800L.
-      gsm.reset_();
+      gsm.reset_cpu_();
     }
   }
 
@@ -232,13 +236,6 @@ void saveCounter() {
   EEPROM.put(eepromAddress, counterRecord);
 }
 
-void resetGsmHardware() {
-  // SIM800L RST jest aktywny w stanie niskim.
-  digitalWrite(BoardPins::GSM_RESET, LOW);
-  delay(150);
-  digitalWrite(BoardPins::GSM_RESET, HIGH);
-  delay(15000);
-}
 
 void readConsole() {
   while (DEBUG_SERIAL.available()) {

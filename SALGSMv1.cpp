@@ -2,16 +2,30 @@
 
 #include <avr/wdt.h>
 
-SALGSMv1::SALGSMv1(Stream &serial,
-                   Stream &debugSerial,
-                   const char *apn,
-                   bool debug)
-    : DEBUG(debug), my_serial(&serial), debug_serial(&debugSerial) {
+SALGSMv1::SALGSMv1(Stream &serial, Stream &debugSerial, const char *apn,  const char *apikey, const char *serverurl, bool debug, uint8_t GSMenable_pin_cpu, uint8_t GSMreset_pin_cpu)
+: GSM_ENABLE(GSMenable_pin_cpu), GSM_RESET(GSMreset_pin_cpu), DEBUG(debug), my_serial(&serial), debug_serial(&debugSerial) {
   strncpy(my_APN, apn, sizeof(my_APN) - 1);
   my_APN[sizeof(my_APN) - 1] = '\0';
+  strncpy(my_APIKEY, apikey, sizeof(my_APIKEY) - 1);
+  my_APIKEY[sizeof(my_APIKEY) - 1] = '\0';
+  strncpy(my_SERVERURL, serverurl, sizeof(my_SERVERURL) - 1);
+  my_SERVERURL[sizeof(my_SERVERURL) - 1] = '\0';
+
+  pinMode(this->GSM_RESET, OUTPUT);
+  pinMode(this->GSM_ENABLE, OUTPUT);
+  digitalWrite(this->GSM_ENABLE, LOW);  
+  digitalWrite(this->GSM_RESET, HIGH);
 }
 
-bool SALGSMv1::init() {
+//switch on
+bool SALGSMv1::switch_on() {
+  digitalWrite(this->GSM_ENABLE, HIGH);  
+  delay(1000);
+  digitalWrite(this->GSM_RESET, LOW); // SIM800L RST jest aktywny w stanie niskim.
+  delay(150);
+  digitalWrite(this->GSM_RESET, HIGH);
+  delay(15000);
+
   for (uint8_t attempt = 0; attempt < 10; ++attempt) {
     delay(1500);
     IMSI();
@@ -24,14 +38,20 @@ bool SALGSMv1::init() {
 
   if (strlen(my_IMSI) < 10) {
     debug_serial->println("Brak poprawnego IMSI - reset.");
-    reset_();
+    reset_cpu_();
   }
 
   if (!con_to_internet()) {
     debug_serial->println("Brak polaczenia GPRS - reset.");
-    reset_();
+    reset_cpu_();
   }
 
+  return true;
+}
+
+//switch on
+bool SALGSMv1::switch_off() {
+  digitalWrite(this->GSM_ENABLE, LOW);  
   return true;
 }
 
@@ -183,7 +203,7 @@ bool SALGSMv1::http_get_(const char *cmd) {
   }
 
   if (!STATUS) {
-    reset_();
+    reset_cpu_();
   }
 
   return requestSucceeded;
@@ -246,7 +266,7 @@ bool SALGSMv1::isModuleAlive() {
   return strstr(response, "OK") != nullptr;
 }
 
-void SALGSMv1::reset_() {
+void SALGSMv1::reset_cpu_() {
   if (DEBUG) {
     debug_serial->println("RESET MCU");
   }
