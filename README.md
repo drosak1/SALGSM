@@ -1,5 +1,55 @@
 ## Repozytorium Gitea
 
+<p align="center">
+  <img src="GSMSALv1_.png" width="400"/>
+</p>
+
+
+## Wykorzystanie pamięci ATmega328PB
+
+### Aktualne wykorzystanie pamięci
+
+| Pamięć | Wykorzystane | Zajętość | Wolne |
+|---|---:|---:|---:|
+| Flash | 12 028 / 32 768 B | 36,7% | 20 740 B |
+| SRAM | 953 / 2 048 B | 46,5% | 1 095 B |
+
+**Flash — pamięć programu**
+
+![Flash](https://img.shields.io/badge/Flash-36.7%25-brightgreen)
+
+**SRAM — pamięć operacyjna**
+
+![SRAM](https://img.shields.io/badge/SRAM-46.5%25-brightgreen)
+
+### Porównanie trzech kompilacji
+
+| Parametr | Pierwsza | Druga | Aktualna |
+|---|---:|---:|---:|
+| Flash | 11 668 B | 10 148 B | 12 028 B |
+| SRAM | 1 517 B | 843 B | 953 B |
+| Wolny SRAM | 531 B | 1 205 B | 1 095 B |
+
+### Zmiany względem poprzedniej wersji
+
+- Flash zwiększył się o **1 880 B**.
+- SRAM zwiększył się o **110 B**.
+- Nadal pozostaje ponad **1 KB wolnej pamięci SRAM**.
+
+### Ocena wykorzystania zasobów
+
+Program zajmuje mniej niż 40% pamięci Flash i mniej
+niż 50% pamięci SRAM mikrokontrolera ATmega328PB.
+
+Pozostała pamięć SRAM (1 095 B) jest dostępna dla
+stosu, zmiennych lokalnych i operacji wykonywanych
+podczas pracy programu.
+
+**Status:** Wykorzystanie pamięci jest odpowiednie
+do dalszego rozwoju i testowania biblioteki SALGSMv1.
+
+### warto znac
+
 AT+IPR=9600 -> ustawia transmisje na GSM
 
 Creating a new repository on the command line
