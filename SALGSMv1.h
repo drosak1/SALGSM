@@ -22,6 +22,7 @@ public:
   bool switch_off();
   bool send(const char* key, const char* value);
   bool send(const char* key, double value);
+  void readNetworkData();
 
   void reset_cpu_();
   bool isModuleAlive();
@@ -32,6 +33,8 @@ public:
   char my_APIKEY[10]      = {0};
   char my_SERVERURL[20]   = {0};
   char IP[20]             = {0};
+  char RSSI[5]            = {0};
+  char LOCALISATION[20]   = {0};
 
   uint8_t GSM_RESET; //  reset gdy stan niski
   uint8_t GSM_ENABLE; // aktywny stan wysoki

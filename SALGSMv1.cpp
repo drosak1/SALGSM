@@ -1,5 +1,7 @@
 #include "SALGSMv1.h"
 
+#include <stdlib.h>
+
 SALGSMv1::SALGSMv1(Stream &serial, Stream &debugSerial, const char *apn,  const char *apikey, const char *serverurl, bool debug, uint8_t GSMenable_pin_cpu, uint8_t GSMreset_pin_cpu)
 : GSM_ENABLE(GSMenable_pin_cpu), GSM_RESET(GSMreset_pin_cpu), DEBUG(debug), my_serial(&serial), debug_serial(&debugSerial) {
   strncpy(my_APN, apn, sizeof(my_APN) - 1);
@@ -44,6 +46,8 @@ bool SALGSMv1::switch_on() {
     reset_cpu_();
   }
 
+  readNetworkData();
+
   return true;
 }
 
@@ -75,12 +79,14 @@ bool SALGSMv1::send(const char* key, const char* value) {
 
 
     const int length = snprintf(url,sizeof(url),
-                  "AT+HTTPPARA=\"URL\",\"http://%s/api/tlm/v2/set.php?ID=%s&description=%s&value=%s&unit=-&IP=%s\"",
+                  "AT+HTTPPARA=\"URL\",\"http://%s/api/tlm/v2/set.php?ID=%s&D=%s&V=%s&U=--&IP=%s&RSSI=%s&BAT=75&L=%s&VER=1\"",
                                 this->my_SERVERURL,
                                 this->my_IMSI,
                                 key_,
                                 value_,
-                                this->IP
+                                this->IP,
+                                this->RSSI,
+                                this->LOCALISATION
                               );
 
   if (length < 0 || static_cast<size_t>(length) >= sizeof(url)) {
@@ -98,7 +104,7 @@ bool SALGSMv1::send(const char* key, const char* value) {
 //przeciazenie funkcji
 bool SALGSMv1::send(const char* key, double value) {
     char buffer[32];
-    dtostrf(value, 0, 4, buffer);
+    dtostrf(value, 0, 3, buffer);
     return send(key, buffer);
 }
 
@@ -108,6 +114,70 @@ void SALGSMv1::IMSI() {
 
   strncpy(my_IMSI, extractID(response), sizeof(my_IMSI) - 1);
   my_IMSI[sizeof(my_IMSI) - 1] = '\0';
+}
+
+void SALGSMv1::readNetworkData() {
+  char response[200] = {0};
+  clear(RSSI, sizeof(RSSI));
+  clear(LOCALISATION, sizeof(LOCALISATION));
+
+  sendAT("AT+CSQ", response, sizeof(response), 2000);
+  char *csq = strstr(response, "+CSQ:");
+  int rssi = 99;
+  if (csq != nullptr && sscanf(csq, "+CSQ:%d", &rssi) == 1 &&
+      rssi >= 0 && rssi <= 99) {
+    snprintf(RSSI, sizeof(RSSI), "%d", rssi);
+  }
+
+  // Pobierz identyfikatory komorki do pozniejszego wyszukania w bazie nadajnikow.
+  clear(response, sizeof(response));
+  sendAT("AT+CREG=2", response, sizeof(response), 2000);
+  DEBUG_PRINT("CREG config: ");
+  DEBUG_PRINTLN(response);
+
+  clear(response, sizeof(response));
+  sendAT("AT+CREG?", response, sizeof(response), 2000);
+  DEBUG_PRINT("CELL CREG (n,status,LAC,CI): ");
+  DEBUG_PRINTLN(response);
+
+  char lac[5] = {0};
+  char cellId[5] = {0};
+  char operatorCode[7] = {0};
+  int cregMode = -1;
+  int registrationStatus = -1;
+
+  char *creg = strstr(response, "+CREG:");
+  bool cellDataValid =
+      creg != nullptr &&
+      sscanf(creg, "+CREG:%d,%d,\"%4[0-9A-Fa-f]\",\"%4[0-9A-Fa-f]\"",
+             &cregMode, &registrationStatus, lac, cellId) == 4 &&
+      cregMode == 2 && (registrationStatus == 1 || registrationStatus == 5);
+
+  clear(response, sizeof(response));
+  sendAT("AT+COPS=3,2", response, sizeof(response), 2000);
+  clear(response, sizeof(response));
+  sendAT("AT+COPS?", response, sizeof(response), 2000);
+  DEBUG_PRINT("OPERATOR COPS (numeric MCC/MNC): ");
+  DEBUG_PRINTLN(response);
+
+  int copsMode = -1;
+  int copsFormat = -1;
+  char *cops = strstr(response, "+COPS:");
+  bool operatorDataValid =
+      cops != nullptr &&
+      sscanf(cops, "+COPS:%d,%d,\"%6[0-9]\"",
+             &copsMode, &copsFormat, operatorCode) == 3 &&
+      strlen(operatorCode) >= 5;
+
+  if (cellDataValid && operatorDataValid) {
+    snprintf(LOCALISATION, sizeof(LOCALISATION), "%.3s_%s_%s_%s",
+             operatorCode, operatorCode + 3, lac, cellId);
+  }
+
+  DEBUG_PRINT("RSSI (CSQ): ");
+  DEBUG_PRINTLN(RSSI[0] ? RSSI : "brak danych");
+  DEBUG_PRINT("Lokalizacja sieci (MCC/MNC_LAC_CI): ");
+  DEBUG_PRINTLN(LOCALISATION[0] ? LOCALISATION : "brak danych");
 }
 
 bool SALGSMv1::con_to_internet() {

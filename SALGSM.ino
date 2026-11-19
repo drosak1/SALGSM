@@ -106,7 +106,9 @@ void loop() {
     saveCounter();
     DEBUG_SERIAL.print("Licznik -> ");
     DEBUG_SERIAL.println(counterRecord.value);
-    gsm.send("licznik", counterRecord.value);
+    //gsm.send("licznik", counterRecord.value);
+    float waga = random(55000, 57000) / 1000.0f;
+    gsm.send("waga", waga);
   }
 
   if (pulseEvent) {

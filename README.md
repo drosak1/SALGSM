@@ -20,6 +20,22 @@ git remote set-url origin https://[USER]:[TOKEN]@dlb.blue/drosak/SALGSM.git
 
 git push --force origin main
 
+## Localisation
+
+"L=260_03_E182_AF8D"
+
+konwersja z szesnastkowego (HEX) na dziesiętny (DEC). LAC i CI z odpowiedzi AT+CREG? są podane w HEX.
+- E182 → 14×16³ + 1×16² + 8×16 + 2 = 57730
+- AF8D → 10×16³ + 15×16² + 8×16 + 13 = 44941
+
+po przeliczeniu LAC E182 na 57730 i CI AF8D na 44941 baza zwróciła:
+- Długość geograficzna: 16.920687
+- Szerokość geograficzna: 51.145337
+- Do zmiennej LOCALISATION w formacie lon,lat: 16.9207,51.1453
+
+https://api.mylnikov.org/geolocation/cell?v=1.1&data=open&mcc=260&mnc=3&lac=57730&cellid=44941
+\_>
+{"result":200, "data":{"lat": 51.14533721402, "range": 16933.042, "lon": 16.92068688185, "time": 1795095271}}
 
 ## Github
 
