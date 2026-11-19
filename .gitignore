@@ -1,2 +1,5 @@
+\build
 build/
-.vscode
+build/**
+/build-atmega4809/
+/tmp/
